@@ -101,6 +101,7 @@ app.get('/payment.html', (req, res) => {
 
 // Static files
 app.use(express.static(path.join(__dirname, '..')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // API: Get QR code image for a ticket
 app.get('/api/ticket/:id/qr', async (req, res) => {
