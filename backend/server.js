@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
-const { initDb, query } = require('./db');
+const { initDb, getDb, saveDb, query } = require('./db');
 const QRCode = require('qrcode');
 const cors = require('cors');
 
@@ -117,7 +117,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 // API: Get QR code image for a ticket
 app.get('/api/ticket/:id/qr', async (req, res) => {
   try {
-    const tickets = await query(`SELECT * FROM tickets WHERE id = $1`, [req.params.id]);
+    const db = await getDb();
+    const tickets = query(`SELECT * FROM tickets WHERE id = ?`, [req.params.id]);
     if (tickets.length === 0) {
       return res.json({ success: false, message: 'Ticket not found.' });
     }
@@ -140,7 +141,8 @@ app.get('/api/ticket/:id/qr', async (req, res) => {
 // API: Get QR image direct (for customer viewing)
 app.get('/api/ticket/:id/qr-image', async (req, res) => {
   try {
-    const tickets = await query(`SELECT * FROM tickets WHERE id = $1`, [req.params.id]);
+    const db = await getDb();
+    const tickets = query(`SELECT * FROM tickets WHERE id = ?`, [req.params.id]);
     if (tickets.length === 0) {
       return res.status(404).send('Ticket not found.');
     }
@@ -193,8 +195,9 @@ app.get('/api/ticket/:id/qr-image', async (req, res) => {
 // API: Download ticket as PDF (simplified - generates an HTML page for printing)
 app.get('/api/ticket/:id/download', async (req, res) => {
   try {
-    const tickets = await query(`SELECT t.*, b.booking_number, b.phone, b.event_name, b.event_date, b.event_venue
-      FROM tickets t JOIN bookings b ON t.booking_id = b.id WHERE t.id = $1`, [req.params.id]);
+    const db = await getDb();
+    const tickets = query(`SELECT t.*, b.booking_number, b.phone, b.event_name, b.event_date, b.event_venue
+      FROM tickets t JOIN bookings b ON t.booking_id = b.id WHERE t.id = ?`, [req.params.id]);
     if (tickets.length === 0) {
       return res.status(404).send('Ticket not found.');
     }
