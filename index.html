@@ -257,7 +257,7 @@
             <div style="text-align:right">
               <div class="ticket-type-price" data-total="5899">KES 5,899</div>
               <div class="qty-selector">
-                <button class="qty-btn" aria-label="Decrease quantity">−</button>
+                <button class="qty-btn" aria-label="Decrease quantity">-</button>
                 <input type="number" class="qty-input" value="0" min="0" max="10" aria-label="Quantity" />
                 <button class="qty-btn" aria-label="Increase quantity">+</button>
               </div>
@@ -461,16 +461,19 @@
   </footer>
 
   <script>
+    function safe(sel, ctx) { try { return (ctx || document).querySelector(sel); } catch(e) { return null; } }
+    function safeAll(sel, ctx) { try { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); } catch(e) { return []; } }
+
     // --- Nav ---
     (function() {
-      var navToggle = document.getElementById('navToggle');
-      var navLinks = document.querySelector('.nav-links');
+      var navToggle = safe('#navToggle');
+      var navLinks = safe('.nav-links');
       if (navToggle && navLinks) {
         navToggle.addEventListener('click', function() {
           navLinks.classList.toggle('open');
           navToggle.classList.toggle('active');
         });
-        document.querySelectorAll('.nav-links a, .nav-links button').forEach(function(el) {
+        safeAll('.nav-links a, .nav-links button').forEach(function(el) {
           el.addEventListener('click', function() {
             navLinks.classList.remove('open');
             navToggle.classList.remove('active');
@@ -482,13 +485,13 @@
     // --- Ticket Cart System ---
     var MAX_QTY = 10;
 
-    // Read the cart: returns { items: [...], grandTotal: number, grandQty: number, summary: string }
     function getCart() {
       var items = [];
       var grandTotal = 0;
       var grandQty = 0;
-      document.querySelectorAll('.ticket-type').forEach(function(el) {
-        var input = el.querySelector('.qty-input');
+      safeAll('.ticket-type').forEach(function(el) {
+        var input = safe('.qty-input', el);
+        if (!input) return;
         var qty = parseInt(input.value, 10) || 0;
         if (qty > 0) {
           var type = el.getAttribute('data-ticket-type');
@@ -504,43 +507,46 @@
       return { items: items, grandTotal: grandTotal, grandQty: grandQty, summary: summary };
     }
 
-    // Update the checkout button, amounts shown on each card, and the checkout link
     function updateCheckout() {
-      var cart = getCart();
-      var link = document.querySelector('.btn-get-tickets');
+      try {
+        var cart = getCart();
+        var link = safe('.btn-get-tickets');
+        if (!link) return;
 
-      // Update each card's displayed line total
-      document.querySelectorAll('.ticket-type').forEach(function(el) {
-        var input = el.querySelector('.qty-input');
-        var qty = parseInt(input.value, 10) || 0;
-        var price = parseInt(el.getAttribute('data-ticket-price')) || 0;
-        var totalEl = el.querySelector('.ticket-type-price');
-        if (totalEl) {
-          totalEl.setAttribute('data-total', price * qty);
-          if (qty > 0) {
-            totalEl.textContent = 'KES ' + (price * qty).toLocaleString() + ' (' + qty + ' × KES ' + price.toLocaleString() + ')';
-          } else {
-            totalEl.textContent = 'KES ' + price.toLocaleString();
+        safeAll('.ticket-type').forEach(function(el) {
+          var input = safe('.qty-input', el);
+          if (!input) return;
+          var qty = parseInt(input.value, 10) || 0;
+          var price = parseInt(el.getAttribute('data-ticket-price')) || 0;
+          var totalEl = safe('.ticket-type-price', el);
+          if (totalEl) {
+            totalEl.setAttribute('data-total', price * qty);
+            if (qty > 0) {
+              totalEl.textContent = 'KES ' + (price * qty).toLocaleString() + ' (' + qty + ' x KES ' + price.toLocaleString() + ')';
+            } else {
+              totalEl.textContent = 'KES ' + price.toLocaleString();
+            }
           }
-        }
-      });
+        });
 
-      // Update checkout button
-      if (cart.grandQty === 0) {
-        link.textContent = 'Select Tickets';
-        link.href = '#';
-        link.classList.add('disabled');
-        return;
+        if (cart.grandQty === 0) {
+          link.textContent = 'Select Tickets';
+          link.href = '#';
+          link.classList.add('disabled');
+          return;
+        }
+        link.textContent = 'Get Tickets - KES ' + cart.grandTotal.toLocaleString();
+        link.classList.remove('disabled');
+        link.href = '/payment?amount=' + cart.grandTotal +
+          '&ticketType=' + encodeURIComponent(cart.summary) +
+          '&qty=' + cart.grandQty;
+      } catch(e) {
+        console.error('[CART]', e);
       }
-      link.textContent = 'Get Tickets — KES ' + cart.grandTotal.toLocaleString();
-      link.classList.remove('disabled');
-      link.href = '/payment?amount=' + cart.grandTotal +
-        '&ticketType=' + encodeURIComponent(cart.summary) +
-        '&qty=' + cart.grandQty;
     }
 
-    // Clamp manual input to [min, max]
     function clampQty(input) {
+      if (!input) return;
       var min = parseInt(input.getAttribute('min'), 10) || 0;
       var max = parseInt(input.getAttribute('max'), 10) || MAX_QTY;
       if (input.value === '' || input.value === '-') return;
@@ -549,35 +555,38 @@
       else if (val > max) input.value = max;
     }
 
-    // Click on a ticket card = visual highlight only, no effect on checkout
-    document.querySelectorAll('.ticket-type').forEach(function(el) {
+    safeAll('.ticket-type').forEach(function(el) {
       el.addEventListener('click', function(e) {
         if (e.target.closest('.qty-btn') || e.target.closest('.qty-input') || e.target.closest('.qty-selector')) return;
-        document.querySelectorAll('.ticket-type').forEach(function(t) { t.classList.remove('selected'); });
+        safeAll('.ticket-type').forEach(function(t) { t.classList.remove('selected'); });
         this.classList.add('selected');
       });
     });
 
-    // +/- buttons
-    document.querySelectorAll('.qty-btn').forEach(function(btn) {
+    safeAll('.qty-btn').forEach(function(btn) {
       btn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        var selector = this.closest('.qty-selector');
-        var input = selector.querySelector('.qty-input');
-        var min = parseInt(input.getAttribute('min'), 10) || 0;
-        var max = parseInt(input.getAttribute('max'), 10) || MAX_QTY;
-        var val = parseInt(input.value, 10) || 0;
-        if (this.textContent.trim() === '+') {
-          if (val < max) input.value = val + 1;
-        } else if (val > min) {
-          input.value = val - 1;
+        try {
+          e.stopPropagation();
+          var selector = this.closest('.qty-selector');
+          if (!selector) return;
+          var input = safe('.qty-input', selector);
+          if (!input) return;
+          var min = parseInt(input.getAttribute('min'), 10) || 0;
+          var max = parseInt(input.getAttribute('max'), 10) || MAX_QTY;
+          var val = parseInt(input.value, 10) || 0;
+          if (this.textContent.trim() === '+') {
+            if (val < max) input.value = val + 1;
+          } else if (val > min) {
+            input.value = val - 1;
+          }
+          updateCheckout();
+        } catch(e) {
+          console.error('[BTN]', e);
         }
-        updateCheckout();
       });
     });
 
-    // Manual input
-    document.querySelectorAll('.qty-input').forEach(function(input) {
+    safeAll('.qty-input').forEach(function(input) {
       input.addEventListener('change', function() {
         clampQty(this);
         updateCheckout();
@@ -587,19 +596,17 @@
       });
     });
 
-    // Initialise checkout on page load
     updateCheckout();
 
-    // --- Background animations ---
     var watchCount = 1827;
     setInterval(function() {
       watchCount += Math.floor(Math.random() * 3);
-      var el = document.querySelector('.hero-stat-value');
+      var el = safe('.hero-stat-value');
       if (el) el.textContent = watchCount.toLocaleString();
     }, 5000);
 
     setTimeout(function() {
-      var fill = document.querySelector('.progress-fill');
+      var fill = safe('.progress-fill');
       if (fill) fill.style.width = '82%';
     }, 1000);
   </script>
