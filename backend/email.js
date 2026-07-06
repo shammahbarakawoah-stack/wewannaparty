@@ -1,26 +1,16 @@
-const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 
-const SMTP_HOST = process.env.SMTP_HOST;
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587', 10);
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@wewannaparty.com';
-const FROM_NAME = process.env.FROM_NAME || 'WeWannaParty';
+const FROM_NAME = 'WeWannaParty';
 
-function createTransport() {
-  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) return null;
-  return nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: SMTP_PORT === 465,
-    auth: { user: SMTP_USER, pass: SMTP_PASS }
-  });
+if (SENDGRID_API_KEY) {
+  sgMail.setApiKey(SENDGRID_API_KEY);
 }
 
 async function sendTicketEmail(booking, tickets) {
-  const transport = createTransport();
-  if (!transport || !booking.email) {
-    console.log('[EMAIL] Skipping - no SMTP config or no email:', { hasSMTP: !!SMTP_HOST, email: booking.email });
+  if (!SENDGRID_API_KEY || !booking.email) {
+    console.log('[EMAIL] Skipping - no API key or no email:', { hasKey: !!SENDGRID_API_KEY, email: booking.email });
     return false;
   }
 
@@ -49,7 +39,7 @@ async function sendTicketEmail(booking, tickets) {
 
   const msg = {
     to: booking.email,
-    from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
+    from: { email: FROM_EMAIL, name: FROM_NAME },
     subject: `Your Tickets - ${booking.event_name}`,
     html: `<!DOCTYPE html>
 <html><head><meta charset="utf-8"></head>
@@ -91,11 +81,11 @@ async function sendTicketEmail(booking, tickets) {
   };
 
   try {
-    await transport.sendMail(msg);
+    await sgMail.send(msg);
     console.log('[EMAIL] Tickets sent to', booking.email);
     return true;
   } catch (err) {
-    console.error('[EMAIL] Send failed:', err.message);
+    console.error('[EMAIL] Send failed:', err.response?.body || err.message);
     return false;
   }
 }
