@@ -302,7 +302,7 @@
       <div class="card">
         <div id="alert-area"></div>
 
-        <form id="payment-form">
+        <form id="payment-form" method="POST" action="/api/payment/submit">
           <input type="hidden" name="amount" value="<%= amount %>" />
           <input type="hidden" name="ticket_type" value="<%= ticketType %>" />
           <input type="hidden" name="qty" value="<%= qty %>" />
@@ -364,6 +364,15 @@
     const successPage = document.getElementById('success-page');
     const bookingRefDisplay = document.getElementById('booking-ref-display');
 
+    // Show success page immediately if redirected from backend (JS-less fallback)
+    <% if (success && bookingNumber) { %>
+    bookingRefDisplay.textContent = 'Booking: <%= bookingNumber %>';
+    paymentPage.style.display = 'none';
+    successPage.style.display = 'block';
+    <% } else if (error) { %>
+    showAlert('error', '<%= error.replace(/'/g, "\\'") %>');
+    <% } %>
+
     function showAlert(type, message) {
       alertArea.innerHTML = `<div class="alert-${type}">${message}</div>`;
       alertArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -398,11 +407,11 @@
             phone: phone,
             amount: amount,
             full_name: fullName,
-            ticket_type: '<%= ticketType %>',
-            qty: '<%= qty %>',
-            event_name: 'We"R Afro · TheMostWanted & Friends Africa Live Tour',
-            event_date: '2026-08-29',
-            event_venue: 'Uhuru Gardens, Nairobi'
+            ticket_type: <%= JSON.stringify(ticketType) %>,
+            qty: <%= JSON.stringify(qty) %>,
+            event_name: <%= JSON.stringify('We"R Afro · TheMostWanted & Friends Africa Live Tour') %>,
+            event_date: <%= JSON.stringify('2026-08-29') %>,
+            event_venue: <%= JSON.stringify('Uhuru Gardens, Nairobi') %>
           })
         });
 

@@ -315,7 +315,7 @@
       <div class="card">
         <div id="alert-area"></div>
 
-        <form id="payment-form">
+        <form id="payment-form" method="POST" action="/api/payment/submit">
           <input type="hidden" name="amount" id="hidden-amount" value="3000" />
           <input type="hidden" name="ticket_type" id="hidden-ticket-type" value="General Access" />
           <input type="hidden" name="qty" id="hidden-qty" value="1" />
