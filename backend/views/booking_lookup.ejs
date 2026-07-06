@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Tickets · WeWannaParty</title>
+  <meta name="theme-color" content="#B00000" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #B00000;
+      --bg: #0A0A0A;
+      --card: #111111;
+      --text: #FFFFFF;
+      --text-secondary: #A0A0A0;
+      --text-muted: #6B6B6B;
+      --border: #222222;
+      --success: #10B981;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+      --radius: 12px;
+    }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    h1, h2, h3, h4 { font-family: 'Syne', sans-serif; }
+    a { color: inherit; text-decoration: none; }
+
+    .nav {
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 20px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 16px;
+    }
+    .nav-logo span {
+      background: linear-gradient(135deg, var(--primary), #FF3333);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .nav-links { display: flex; align-items: center; gap: 20px; list-style: none; }
+    .nav-links a { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+    .nav-links a:hover { color: var(--text); }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+    .page-title { font-size: 24px; font-weight: 800; margin-bottom: 24px; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+
+    .form-row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .form-row input {
+      flex: 1;
+      min-width: 180px;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      outline: none;
+    }
+    .form-row input:focus { border-color: var(--primary); }
+    .form-row input::placeholder { color: var(--text-muted); }
+    .form-row button {
+      padding: 12px 28px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .form-row button:hover { background: #8B0000; }
+    .form-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .booking-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    .booking-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .booking-number { font-family: monospace; font-size: 14px; color: var(--primary-light); font-weight: 600; }
+    .badge {
+      display: inline-flex; padding: 4px 12px; border-radius: 100px; font-size: 11px; font-weight: 600;
+    }
+    .badge-pending { background: rgba(245,158,11,0.1); color: var(--warning); border: 1px solid rgba(245,158,11,0.2); }
+    .badge-paid { background: rgba(16,185,129,0.1); color: var(--success); border: 1px solid rgba(16,185,129,0.2); }
+    .badge-rejected { background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
+
+    .ticket-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
+    .ticket-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .ticket-card img { max-width: 180px; margin: 0 auto 12px; display: block; }
+    .ticket-card .number { font-family: monospace; font-size: 12px; color: var(--text-muted); }
+    .ticket-card .type { font-weight: 600; font-size: 14px; margin: 4px 0; }
+    .ticket-card .status { font-size: 12px; }
+
+    .ticket-actions { display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+    .ticket-actions a, .ticket-actions button {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+    .ticket-actions a:hover, .ticket-actions button:hover { border-color: var(--primary); color: var(--text); }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .empty-state svg { margin-bottom: 16px; opacity: 0.3; }
+
+    .loading { text-align: center; padding: 40px; color: var(--text-muted); }
+    .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.1); border-top-color: var(--primary-light); border-radius: 50%; animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 600px) {
+      .container { padding: 20px 16px; }
+      .card, .booking-card { padding: 20px; }
+      .form-row input { min-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <span>WeWannaParty</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="/">Events</a></li>
+        <li><a href="/booking/lookup">My Tickets</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1 class="page-title">My Tickets</h1>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Enter your booking number or phone number to view your tickets.</p>
+
+    <div class="card">
+      <div class="form-row">
+        <input type="text" id="booking-number" placeholder="Booking Number (e.g. WWP-...)" />
+        <span style="color:var(--text-muted);font-size:13px;display:flex;align-items:center;">or</span>
+        <input type="tel" id="phone-number" placeholder="Phone Number (e.g. 0712345678)" />
+        <button id="lookup-btn" onclick="lookupBooking()">Search</button>
+      </div>
+    </div>
+
+    <div id="results"></div>
+  </div>
+
+  <script>
+    async function lookupBooking() {
+      const bookingNum = document.getElementById('booking-number').value.trim();
+      const phone = document.getElementById('phone-number').value.trim();
+      const btn = document.getElementById('lookup-btn');
+      const results = document.getElementById('results');
+
+      if (!bookingNum && !phone) {
+        results.innerHTML = '<div class="empty-state"><p style="color:var(--danger);">Please enter a booking number or phone number.</p></div>';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Searching...';
+      results.innerHTML = '<div class="loading"><span class="spinner"></span><p style="margin-top:12px;">Looking up your booking...</p></div>';
+
+      try {
+        const res = await fetch('/api/booking/lookup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ booking_number: bookingNum, phone })
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+          results.innerHTML = `<div class="empty-state"><p style="color:var(--danger);">${data.message}</p></div>`;
+          return;
+        }
+
+        let html = '';
+        data.bookings.forEach(b => {
+          const statusBadge = `badge-${b.payment_status}`;
+          const statusText = b.payment_status === 'paid' ? 'Approved' : b.payment_status.charAt(0).toUpperCase() + b.payment_status.slice(1);
+
+          html += `<div class="booking-card">
+            <div class="booking-header">
+              <div>
+                <div class="booking-number">${b.booking_number}</div>
+                <div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">${b.event_name}</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${b.phone} · KES ${Number(b.amount).toLocaleString()}</div>
+              </div>
+              <span class="badge ${statusBadge}">${statusText}</span>
+            </div>`;
+
+          if (b.payment_status === 'paid' && b.tickets && b.tickets.length > 0) {
+            html += `<div class="ticket-grid">`;
+            b.tickets.forEach(t => {
+              const tStatus = t.status.charAt(0).toUpperCase() + t.status.slice(1);
+              html += `<div class="ticket-card">
+                <div style="margin-bottom:8px;">
+                  <svg width="80" height="80" viewBox="0 0 100 100" style="margin:0 auto;display:block;">
+                    <rect x="5" y="5" width="90" height="90" rx="8" fill="none" stroke="#333" stroke-width="2"/>
+                    <rect x="25" y="25" width="50" height="50" rx="4" fill="none" stroke="#B00000" stroke-width="1.5"/>
+                    <text x="50" y="55" text-anchor="middle" fill="#B00000" font-family="monospace" font-size="10">TICKET</text>
+                    <text x="50" y="68" text-anchor="middle" fill="#666" font-family="monospace" font-size="6">${t.ticket_number.slice(-8)}</text>
+                  </svg>
+                </div>
+                <div class="number">${t.ticket_number}</div>
+                <div class="type">${t.ticket_type}</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Holder: ${t.holder_name || '—'}</div>
+                <div class="status" style="margin-top:4px;"><span class="badge badge-${t.status}">${tStatus}</span></div>
+                <div class="ticket-actions">
+                  <a href="/api/ticket/${t.id}/download" target="_blank">Download PDF</a>
+                  <a href="/api/ticket/${t.id}/qr-image" target="_blank">Show QR</a>
+                </div>
+              </div>`;
+            });
+            html += `</div>`;
+          } else if (b.payment_status === 'pending') {
+            html += `<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:13px;background:rgba(245,158,11,0.05);border-radius:8px;margin-top:8px;">
+              Your payment is awaiting verification. Tickets will appear here once approved.</div>`;
+          } else if (b.payment_status === 'rejected') {
+            html += `<div style="padding:16px;text-align:center;color:var(--danger);font-size:13px;background:rgba(239,68,68,0.05);border-radius:8px;margin-top:8px;">
+              Payment was rejected. ${b.rejection_reason ? 'Reason: ' + b.rejection_reason : ''}</div>`;
+          }
+          html += `</div>`;
+        });
+
+        results.innerHTML = html;
+      } catch (err) {
+        results.innerHTML = '<div class="empty-state"><p style="color:var(--danger);">Network error. Please try again.</p></div>';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Search';
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+{"success":true,"message":"Valid Ticket","code":"valid","ticket":{"id":1,"ticketNumber":"TKT-2BA523C08E74","eventName":"We\"R Afro · TheMostWanted & Friends Africa Live Tour","holderName":"Test User","ticketType":"General Access","bookingNumber":"WWP-MR8WZ6X4-D28860","status":"unused"}}

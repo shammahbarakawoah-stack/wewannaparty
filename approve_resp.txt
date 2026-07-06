@@ -1,0 +1,1 @@
+{"success":true,"message":"Payment approved and tickets generated.","tickets":["TKT-2BA523C08E74"]}

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Scanner · WeWannaParty Admin</title>
+  <meta name="theme-color" content="#B00000" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #B00000;
+      --primary-dark: #8B0000;
+      --bg: #0A0A0A;
+      --card: #111111;
+      --text: #FFFFFF;
+      --text-secondary: #A0A0A0;
+      --text-muted: #6B6B6B;
+      --border: #222222;
+      --success: #10B981;
+      --danger: #EF4444;
+      --warning: #F59E0B;
+      --radius: 12px;
+    }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); }
+    h1, h2, h3, h4 { font-family: 'Syne', sans-serif; }
+    a { color: inherit; text-decoration: none; }
+
+    .nav {
+      background: rgba(0,0,0,0.9);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-brand { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 16px; background: linear-gradient(135deg, var(--primary), #FF3333); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .nav-links { display: flex; align-items: center; gap: 20px; list-style: none; }
+    .nav-links a { font-size: 13px; font-weight: 500; color: var(--text-secondary); padding: 6px 12px; border-radius: 6px; transition: all 0.2s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--text); background: rgba(255,255,255,0.04); }
+    .nav-links a.active { color: var(--primary-light); }
+    .container { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
+    .page-title { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+    .page-subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+
+    .scanner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 768px) { .scanner-grid { grid-template-columns: 1fr; } }
+
+    .scanner-box {
+      background: #000;
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      min-height: 360px;
+      position: relative;
+    }
+    .scanner-box #reader {
+      width: 100%;
+      min-height: 360px;
+    }
+    .scanner-box video { border-radius: 14px; }
+
+    .result-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      min-height: 360px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .result-box .placeholder {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .result-box .placeholder svg { margin-bottom: 12px; opacity: 0.3; }
+
+    .result-valid {
+      text-align: center;
+    }
+    .result-valid .icon-big {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .result-valid .icon-big.valid { background: rgba(16,185,129,0.1); border: 2px solid rgba(16,185,129,0.3); }
+    .result-valid .icon-big.invalid { background: rgba(239,68,68,0.1); border: 2px solid rgba(239,68,68,0.3); }
+    .result-valid .icon-big.used { background: rgba(245,158,11,0.1); border: 2px solid rgba(245,158,11,0.3); }
+
+    .result-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .result-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+
+    .ticket-info { text-align: left; margin-top: 12px; }
+    .ticket-info .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
+    .ticket-info .row:last-child { border-bottom: none; }
+    .ticket-info .label { color: var(--text-muted); }
+    .ticket-info .value { color: var(--text); font-weight: 500; }
+
+    .btn-checkin {
+      width: 100%;
+      margin-top: 20px;
+      padding: 14px;
+      background: var(--success);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-checkin:hover { opacity: 0.85; }
+    .btn-checkin:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .manual-input { margin-top: 16px; }
+    .manual-input input {
+      width: 100%;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: monospace;
+      font-size: 13px;
+      outline: none;
+    }
+    .manual-input input:focus { border-color: var(--primary); }
+    .manual-btn {
+      margin-top: 8px;
+      padding: 8px 16px;
+      background: rgba(176,0,0,0.1);
+      border: 1px solid rgba(176,0,0,0.2);
+      border-radius: 6px;
+      color: var(--primary-light);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .manual-btn:hover { background: rgba(176,0,0,0.2); }
+
+    .btn-toggle-scanner {
+      margin-top: 12px;
+      padding: 8px 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      width: 100%;
+    }
+    .btn-toggle-scanner:hover { border-color: var(--text-muted); }
+
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .scanning-indicator {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(0,0,0,0.7);
+      padding: 4px 12px;
+      border-radius: 100px;
+      font-size: 11px;
+      color: var(--success);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      animation: pulse 1.5s infinite;
+    }
+    .scanning-indicator .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="nav-brand">WeWannaParty Admin</div>
+      <ul class="nav-links">
+        <li><a href="/admin/dashboard">Dashboard</a></li>
+        <li><a href="/admin/payments">Payments</a></li>
+        <li><a href="/admin/tickets">Tickets</a></li>
+        <li><a href="/admin/scanner" class="active">Scanner</a></li>
+        <li><a href="/admin/logout">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1 class="page-title">QR Code Scanner</h1>
+    <p class="page-subtitle">Point the camera at a ticket QR code to verify and check in attendees</p>
+
+    <div class="scanner-grid">
+      <div>
+        <div class="scanner-box">
+          <div class="scanning-indicator" id="scan-indicator">
+            <span class="dot"></span>
+            Scanning...
+          </div>
+          <div id="reader"></div>
+        </div>
+        <button class="btn-toggle-scanner" id="toggle-scanner" onclick="toggleScanner()">Stop Scanner</button>
+        <div class="manual-input">
+          <input type="text" id="manual-qr" placeholder="Or paste QR code here..." />
+          <button class="manual-btn" onclick="manualScan()">Verify Code</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="result-box" id="result-box">
+          <div class="placeholder" id="placeholder-view">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/>
+              <path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
+            </svg>
+            <p>Scan a ticket QR code to verify</p>
+          </div>
+          <div id="result-content" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let html5QrCode = null;
+    let isScanning = false;
+    let lastScannedTicket = null;
+
+    function startScanner() {
+      if (isScanning) return;
+      const reader = document.getElementById('reader');
+      reader.innerHTML = '';
+
+      html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        onScanSuccess
+      ).then(() => {
+        isScanning = true;
+        document.getElementById('scan-indicator').style.display = 'flex';
+        document.getElementById('toggle-scanner').textContent = 'Stop Scanner';
+      }).catch(err => {
+        console.warn('Camera error:', err);
+        document.getElementById('scan-indicator').style.display = 'none';
+        document.getElementById('reader').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px;">Camera unavailable. Use manual input below.</div>';
+      });
+    }
+
+    function stopScanner() {
+      if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+          isScanning = false;
+          document.getElementById('scan-indicator').style.display = 'none';
+          document.getElementById('toggle-scanner').textContent = 'Start Scanner';
+        }).catch(() => {});
+      } else {
+        isScanning = false;
+        document.getElementById('toggle-scanner').textContent = 'Start Scanner';
+      }
+    }
+
+    function toggleScanner() {
+      if (isScanning) stopScanner();
+      else startScanner();
+    }
+
+    async function onScanSuccess(qrData) {
+      if (document.getElementById('result-content').dataset.processing === 'true') return;
+      stopScanner();
+      await verifyQR(qrData);
+    }
+
+    async function manualScan() {
+      const qrData = document.getElementById('manual-qr').value.trim();
+      if (!qrData) return;
+      await verifyQR(qrData);
+    }
+
+    async function verifyQR(qrData) {
+      const content = document.getElementById('result-content');
+      content.dataset.processing = 'true';
+
+      try {
+        const res = await fetch('/admin/api/scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ qr_data: qrData })
+        });
+        const data = await res.json();
+
+        if (data.code === 'valid') {
+          lastScannedTicket = data.ticket;
+          content.innerHTML = `
+            <div class="result-valid">
+              <div class="icon-big valid">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="result-title" style="color:var(--success);">Valid Ticket</div>
+              <div class="result-subtitle">Ticket verified successfully</div>
+              <div class="ticket-info">
+                <div class="row"><span class="label">Ticket #</span><span class="value">${data.ticket.ticketNumber}</span></div>
+                <div class="row"><span class="label">Event</span><span class="value">${data.ticket.eventName}</span></div>
+                <div class="row"><span class="label">Holder</span><span class="value">${data.ticket.holderName || '—'}</span></div>
+                <div class="row"><span class="label">Type</span><span class="value">${data.ticket.ticketType}</span></div>
+                <div class="row"><span class="label">Booking</span><span class="value">${data.ticket.bookingNumber}</span></div>
+              </div>
+              <button class="btn-checkin" onclick="checkIn(${data.ticket.id})">Check In</button>
+            </div>
+          `;
+        } else if (data.code === 'used') {
+          content.innerHTML = `
+            <div class="result-valid">
+              <div class="icon-big used">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              </div>
+              <div class="result-title" style="color:var(--warning);">Already Used</div>
+              <div class="result-subtitle">This ticket has already been used.</div>
+              <div class="ticket-info">
+                <div class="row"><span class="label">First Check-in</span><span class="value">${data.firstCheckedIn || 'Unknown'}</span></div>
+                <div class="row"><span class="label">Ticket #</span><span class="value">${data.ticket.ticketNumber}</span></div>
+                <div class="row"><span class="label">Holder</span><span class="value">${data.ticket.holderName || '—'}</span></div>
+              </div>
+            </div>
+          `;
+        } else if (data.code === 'cancelled') {
+          content.innerHTML = `
+            <div class="result-valid">
+              <div class="icon-big invalid">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </div>
+              <div class="result-title" style="color:var(--danger);">Cancelled Ticket</div>
+              <div class="result-subtitle">This ticket has been cancelled and is no longer valid.</div>
+            </div>
+          `;
+        } else {
+          content.innerHTML = `
+            <div class="result-valid">
+              <div class="icon-big invalid">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </div>
+              <div class="result-title" style="color:var(--danger);">Invalid Ticket</div>
+              <div class="result-subtitle">QR code not recognized in our system.</div>
+            </div>
+          `;
+        }
+      } catch (err) {
+        content.innerHTML = `<div class="result-valid"><div class="result-title" style="color:var(--danger);">Error</div><div class="result-subtitle">Failed to verify ticket.</div></div>`;
+      }
+
+      document.getElementById('placeholder-view').style.display = 'none';
+      content.style.display = 'block';
+      content.dataset.processing = 'false';
+    }
+
+    async function checkIn(ticketId) {
+      const btn = document.querySelector('.btn-checkin');
+      btn.disabled = true;
+      btn.textContent = 'Checking in...';
+
+      try {
+        const res = await fetch('/admin/api/ticket/' + ticketId + '/checkin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.querySelector('.result-content, #result-content').innerHTML = `
+            <div class="result-valid">
+              <div class="icon-big valid">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="result-title" style="color:var(--success);">Checked In Successfully</div>
+              <div class="result-subtitle">Attendee has been granted entry.</div>
+              <div class="ticket-info">
+                <div class="row"><span class="label">Ticket #</span><span class="value">${lastScannedTicket?.ticketNumber || ''}</span></div>
+                <div class="row"><span class="label">Holder</span><span class="value">${lastScannedTicket?.holderName || '—'}</span></div>
+              </div>
+            </div>
+          `;
+        } else {
+          btn.disabled = false;
+          btn.textContent = 'Check In';
+          alert(data.message);
+        }
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Check In';
+        alert('Error during check-in.');
+      }
+    }
+
+    // Auto-start scanner on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(startScanner, 500);
+    });
+  </script>
+</body>
+</html>
