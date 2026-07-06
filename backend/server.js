@@ -39,6 +39,12 @@ app.use(express.urlencoded({ extended: true }));
 // CORS
 app.use(cors());
 
+// Rate limiting for payment submit endpoint (MUST be before routes)
+if (rateLimit) {
+  const paymentLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: { success: false, message: 'Too many requests, please try again later.' } });
+  app.use('/api/payment/submit', paymentLimiter);
+}
+
 // Root route
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'index.html'));
@@ -49,7 +55,7 @@ app.get('/index.html', (req, res) => {
   res.redirect(301, '/');
 });
 
-// Routes
+// Routes (must be after rate limiters)
 const paymentRoutes = require('./routes/payments');
 const adminRoutes = require('./routes/admin');
 app.use('/', paymentRoutes);
@@ -64,12 +70,6 @@ app.get('/payment.html', (req, res) => {
 
 // Static files
 app.use(express.static(path.join(__dirname, '..')));
-
-// Rate limiting for payment submit endpoint
-if (rateLimit) {
-  const paymentLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: { success: false, message: 'Too many requests, please try again later.' } });
-  app.use('/api/payment/submit', paymentLimiter);
-}
 
 // API: Get QR code image for a ticket
 app.get('/api/ticket/:id/qr', async (req, res) => {

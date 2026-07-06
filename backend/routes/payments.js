@@ -55,53 +55,70 @@ router.get('/payment', (req, res) => {
 });
 
 router.post('/api/payment/submit', async (req, res) => {
+  console.log('[PAYMENT] POST /api/payment/submit - request received');
   try {
     const { mpesa_code, phone, amount_paid, amount: bodyAmount, full_name, ticket_type, qty, event_name, event_date, event_venue } = req.body;
+    console.log('[PAYMENT] Body received:', JSON.stringify({ mpesa_code, phone, bodyAmount, full_name, ticket_type, qty, event_name, event_date, event_venue }));
     const parsedAmount = parseFloat(bodyAmount || amount_paid || 0);
 
     const sanitizedCode = sanitize(mpesa_code || '');
     const sanitizedPhone = sanitize(phone || '');
     const sanitizedName = sanitize(full_name || '');
+    console.log('[PAYMENT] Sanitized - code:', sanitizedCode, 'phone:', sanitizedPhone, 'name:', sanitizedName, 'amount:', parsedAmount);
 
     if (!sanitizedCode) {
+      console.log('[PAYMENT] Validation failed: missing M-Pesa code');
       return res.json({ success: false, message: 'M-Pesa Confirmation Code is required.' });
     }
     if (!/^[a-zA-Z0-9]+$/.test(sanitizedCode)) {
+      console.log('[PAYMENT] Validation failed: non-alphanumeric code');
       return res.json({ success: false, message: 'M-Pesa Confirmation Code must be alphanumeric.' });
     }
     if (sanitizedCode.length > 30) {
+      console.log('[PAYMENT] Validation failed: code too long');
       return res.json({ success: false, message: 'M-Pesa Confirmation Code must be at most 30 characters.' });
     }
 
     if (!sanitizedPhone) {
+      console.log('[PAYMENT] Validation failed: missing phone');
       return res.json({ success: false, message: 'Phone number is required.' });
     }
     const phoneDigits = sanitizedPhone.replace(/[\s-]/g, '');
     if (!/^(?:\+254|0)\d{9}$/.test(phoneDigits)) {
+      console.log('[PAYMENT] Validation failed: invalid phone format:', phoneDigits);
       return res.json({ success: false, message: 'Please enter a valid phone number (+254 or 0 prefix).' });
     }
 
     if (!parsedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
+      console.log('[PAYMENT] Validation failed: invalid amount:', parsedAmount);
       return res.json({ success: false, message: 'A valid positive amount is required.' });
     }
 
     if (sanitizedName.length > 100) {
+      console.log('[PAYMENT] Validation failed: name too long');
       return res.json({ success: false, message: 'Full name must be at most 100 characters.' });
     }
 
+    console.log('[PAYMENT] Validation passed, getting database...');
     const db = await getDb();
     const bookingNumber = generateBookingNumber();
+    console.log('[PAYMENT] Generated booking number:', bookingNumber);
 
+    console.log('[PAYMENT] Checking for duplicate M-Pesa code:', sanitizedCode);
     const existing = query(`SELECT id FROM bookings WHERE mpesa_code = ?`, [sanitizedCode]);
     if (existing.length > 0) {
+      console.log('[PAYMENT] Duplicate M-Pesa code detected');
       return res.json({ success: false, message: 'This M-Pesa Confirmation Code has already been used.' });
     }
 
+    console.log('[PAYMENT] Checking for recent duplicate payment');
     const recentDupe = query(`SELECT id FROM bookings WHERE phone = ? AND amount = ? AND created_at >= datetime('now', '-5 minutes')`, [sanitizedPhone, parsedAmount]);
     if (recentDupe.length > 0) {
+      console.log('[PAYMENT] Recent duplicate payment detected');
       return res.json({ success: false, message: 'A similar payment was submitted recently. Please wait for confirmation.' });
     }
 
+    console.log('[PAYMENT] Inserting booking into database...');
     db.run(`INSERT INTO bookings (booking_number, event_name, event_date, event_venue, customer_name, phone, amount, mpesa_code, payment_status)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')`, [
         bookingNumber,
@@ -113,15 +130,20 @@ router.post('/api/payment/submit', async (req, res) => {
         parsedAmount,
         sanitizedCode
       ]);
-    saveDb();
+    console.log('[PAYMENT] Database insert completed');
 
+    console.log('[PAYMENT] Persisting database to disk...');
+    saveDb();
+    console.log('[PAYMENT] Database persisted successfully');
+
+    console.log('[PAYMENT] Success - booking created:', bookingNumber);
     res.json({
       success: true,
       message: 'Thank you. Your payment has been received and is awaiting verification. Your tickets will be generated once payment has been confirmed.',
       bookingNumber
     });
   } catch (err) {
-    console.error('Payment submit error:', err);
+    console.error('[PAYMENT] ERROR:', err.message, err.stack);
     res.json({ success: false, message: 'An error occurred. Please try again.' });
   }
 });
