@@ -53,7 +53,10 @@ router.get('/payment', (req, res) => {
     qty: qty || '1',
     success: success === '1',
     bookingNumber: booking || '',
-    error: error || ''
+    error: error || '',
+    eventName: 'WeR Afro \u00B7 TheMostWanted & Friends Africa Live Tour',
+    eventDate: '2026-08-29',
+    eventVenue: 'Uhuru Gardens, Nairobi'
   });
 });
 

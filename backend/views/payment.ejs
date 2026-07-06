@@ -368,11 +368,11 @@
 
     // Show success page immediately if redirected from backend (JS-less fallback)
     <% if (success && bookingNumber) { %>
-    bookingRefDisplay.textContent = 'Booking: <%= bookingNumber %>';
+    bookingRefDisplay.textContent = 'Booking: <%- bookingNumber %>';
     paymentPage.style.display = 'none';
     successPage.style.display = 'block';
     <% } else if (error) { %>
-    showAlert('error', '<%= error.replace(/'/g, "\\'") %>');
+    showAlert('error', '<%- error.replace(/'/g, "\\'").replace(/"/g, "&quot;") %>');
     <% } %>
 
     function showAlert(type, message) {
@@ -409,11 +409,11 @@
             phone: phone,
             amount: amount,
             full_name: fullName,
-            ticket_type: <%= JSON.stringify(ticketType) %>,
-            qty: <%= JSON.stringify(qty) %>,
-            event_name: <%= JSON.stringify('We"R Afro · TheMostWanted & Friends Africa Live Tour') %>,
-            event_date: <%= JSON.stringify('2026-08-29') %>,
-            event_venue: <%= JSON.stringify('Uhuru Gardens, Nairobi') %>
+            ticket_type: <%- JSON.stringify(ticketType) %>,
+            qty: <%- JSON.stringify(qty) %>,
+            event_name: <%- JSON.stringify(eventName || 'WeR Afro · TheMostWanted & Friends Africa Live Tour') %>,
+            event_date: <%- JSON.stringify(eventDate || '2026-08-29') %>,
+            event_venue: <%- JSON.stringify(eventVenue || 'Uhuru Gardens, Nairobi') %>
           })
         });
 
