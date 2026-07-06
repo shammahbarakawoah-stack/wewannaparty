@@ -24,17 +24,35 @@ app.set('views', path.join(__dirname, 'views'));
 // Security headers
 if (helmet) app.use(helmet());
 
-// Domain redirect: wewannaparty.africa -> kolawewannaparty.onrender.com
+// Domain redirect: old domains -> kolawewannaparty.onrender.com + HTTP -> HTTPS
 app.use((req, res, next) => {
-  const host = req.headers.host || '';
+  const host = (req.headers.host || '').toLowerCase();
   const targetDomain = 'kolawewannaparty.onrender.com';
-  const oldDomains = ['wewannaparty.africa', 'www.wewannaparty.africa', 'wewannaparty.onrender.com'];
-  if (oldDomains.some(d => host.toLowerCase() === d || host.toLowerCase() === 'www.' + d)) {
-    const query = req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '';
-    const path = req.path;
-    return res.redirect(301, 'https://' + targetDomain + path + query);
+  const oldDomains = ['wewannaparty.africa', 'www.wewannaparty.africa'];
+
+  // Old domain -> new domain (always HTTPS)
+  if (oldDomains.some(d => host === d)) {
+    const target = 'https://' + targetDomain + req.originalUrl;
+    console.log('[REDIRECT] 301', host + req.originalUrl, '->', target);
+    return res.redirect(301, target);
   }
+
+  // New domain HTTP -> HTTPS (localhost won't match targetDomain)
+  if (host === targetDomain && req.protocol === 'http') {
+    const target = 'https://' + targetDomain + req.originalUrl;
+    console.log('[REDIRECT] 301 HTTP->HTTPS:', target);
+    return res.redirect(301, target);
+  }
+
   next();
+});
+
+// Robots & Sitemap (serve before session to avoid unnecessary overhead)
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain').sendFile(path.join(__dirname, 'public', 'robots.txt'));
+});
+app.get('/sitemap.xml', (req, res) => {
+  res.type('application/xml').sendFile(path.join(__dirname, 'public', 'sitemap.xml'));
 });
 
 // Session
