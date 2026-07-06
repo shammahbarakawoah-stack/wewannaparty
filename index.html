@@ -104,6 +104,11 @@
     .btn:not(.btn-sm) {
       min-height: 44px;
     }
+    .btn-get-tickets.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
     @media (max-width: 480px) {
       .hero-title { font-size: 28px; }
       .event-card { padding: 20px; }
@@ -153,7 +158,7 @@
           Join thousands of music lovers for an unforgettable celebration of Afrohouse and 3-Step music at Uhuru Gardens. Featuring some of the biggest artists in the scene, world-class production, immersive experiences, and nonstop energy.
         </p>
         <div class="hero-actions">
-          <a href="/payment?amount=3000&ticketType=General+Access&qty=1" class="btn btn-primary btn-lg">Get Tickets</a>
+          <a href="#tickets" class="btn btn-primary btn-lg">Get Tickets</a>
           <button class="btn btn-outline btn-lg">Share Event</button>
         </div>
         <div class="hero-stats">
@@ -212,28 +217,28 @@
         <div style="margin-top:20px;">
           <div style="font-size:12px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">Available Tickets</div>
 
-          <div class="ticket-type selected" data-ticket-type="General Access" data-ticket-price="3000" data-max-qty="10">
+          <div class="ticket-type selected" data-ticket-type="General Access" data-ticket-price="3000">
             <div>
               <div class="ticket-type-name">GENERAL ACCESS</div>
               <div class="ticket-type-desc">Full GA access — All live Amapiano, Afrohouse & 3-Step performances, immersive festival activations, food & beverage vendors on site</div>
             </div>
             <div style="text-align:right">
-              <div class="ticket-type-price">KES 3,000</div>
+              <div class="ticket-type-price" data-total="3000">KES 3,000</div>
               <div class="qty-selector">
                 <button class="qty-btn" aria-label="Decrease quantity">−</button>
-                <input type="number" class="qty-input" value="1" min="1" max="10" aria-label="Quantity" />
+                <input type="number" class="qty-input" value="1" min="0" max="10" aria-label="Quantity" />
                 <button class="qty-btn" aria-label="Increase quantity">+</button>
               </div>
             </div>
           </div>
 
-          <div class="ticket-type" data-ticket-type="Priority Access" data-ticket-price="8000" data-max-qty="10">
+          <div class="ticket-type" data-ticket-type="Priority Access" data-ticket-price="8000">
             <div>
               <div class="ticket-type-name">PRIORITY ACCESS</div>
               <div class="ticket-type-desc">Priority entry & fast-track, exclusive VIP area, premium stage views, dedicated VIP bars, designated parking</div>
             </div>
             <div style="text-align:right">
-              <div class="ticket-type-price">KES 8,000</div>
+              <div class="ticket-type-price" data-total="8000">KES 8,000</div>
               <div class="qty-selector">
                 <button class="qty-btn" aria-label="Decrease quantity">−</button>
                 <input type="number" class="qty-input" value="0" min="0" max="10" aria-label="Quantity" />
@@ -242,13 +247,13 @@
             </div>
           </div>
 
-          <div class="ticket-type" data-ticket-type="Duo" data-ticket-price="5899" data-max-qty="10">
+          <div class="ticket-type" data-ticket-type="Duo" data-ticket-price="5899">
             <div>
               <div class="ticket-type-name">DUO</div>
               <div class="ticket-type-desc">Full GA access for two — everything is better with a friend</div>
             </div>
             <div style="text-align:right">
-              <div class="ticket-type-price">KES 5,899</div>
+              <div class="ticket-type-price" data-total="5899">KES 5,899</div>
               <div class="qty-selector">
                 <button class="qty-btn" aria-label="Decrease quantity">−</button>
                 <input type="number" class="qty-input" value="0" min="0" max="10" aria-label="Quantity" />
@@ -257,13 +262,13 @@
             </div>
           </div>
 
-          <div class="ticket-type" data-ticket-type="Squad Pass (X5)" data-ticket-price="13999" data-max-qty="10">
+          <div class="ticket-type" data-ticket-type="Squad Pass (X5)" data-ticket-price="13999">
             <div>
               <div class="ticket-type-name">SQUAD PASS (X5)</div>
               <div class="ticket-type-desc">Better with your whole crew — Full GA access for five</div>
             </div>
             <div style="text-align:right">
-              <div class="ticket-type-price">KES 13,999</div>
+              <div class="ticket-type-price" data-total="13999">KES 13,999</div>
               <div class="ticket-type-left">Best value</div>
               <div class="qty-selector">
                 <button class="qty-btn" aria-label="Decrease quantity">−</button>
@@ -273,8 +278,8 @@
             </div>
           </div>
 
-          <a href="/payment?amount=3000&ticketType=General+Access&qty=1" class="btn btn-primary btn-full btn-lg btn-get-tickets">
-            Get Tickets — KES 3,000
+          <a href="#" class="btn btn-primary btn-full btn-lg btn-get-tickets">
+            Select Tickets
           </a>
         </div>
 
@@ -454,50 +459,87 @@
   </footer>
 
   <script>
-    var navToggle = document.getElementById('navToggle');
-    var navLinks = document.querySelector('.nav-links');
-    if (navToggle && navLinks) {
-      navToggle.addEventListener('click', function() {
-        navLinks.classList.toggle('open');
-        navToggle.classList.toggle('active');
-      });
-      document.querySelectorAll('.nav-links a, .nav-links button').forEach(function(el) {
-        el.addEventListener('click', function() {
-          navLinks.classList.remove('open');
-          navToggle.classList.remove('active');
+    // --- Nav ---
+    (function() {
+      var navToggle = document.getElementById('navToggle');
+      var navLinks = document.querySelector('.nav-links');
+      if (navToggle && navLinks) {
+        navToggle.addEventListener('click', function() {
+          navLinks.classList.toggle('open');
+          navToggle.classList.toggle('active');
         });
-      });
-    }
+        document.querySelectorAll('.nav-links a, .nav-links button').forEach(function(el) {
+          el.addEventListener('click', function() {
+            navLinks.classList.remove('open');
+            navToggle.classList.remove('active');
+          });
+        });
+      }
+    })();
 
+    // --- Ticket Cart System ---
     var MAX_QTY = 10;
 
-    function getQtyInput(selected) {
-      return selected ? selected.querySelector('.qty-input') : null;
+    // Read the cart: returns { items: [...], grandTotal: number, grandQty: number, summary: string }
+    function getCart() {
+      var items = [];
+      var grandTotal = 0;
+      var grandQty = 0;
+      document.querySelectorAll('.ticket-type').forEach(function(el) {
+        var input = el.querySelector('.qty-input');
+        var qty = parseInt(input.value, 10) || 0;
+        if (qty > 0) {
+          var type = el.getAttribute('data-ticket-type');
+          var price = parseInt(el.getAttribute('data-ticket-price')) || 0;
+          items.push({ type: type, qty: qty, price: price });
+          grandTotal += price * qty;
+          grandQty += qty;
+        }
+      });
+      var summary = items.map(function(item) {
+        return item.type + ' x' + item.qty;
+      }).join(', ');
+      return { items: items, grandTotal: grandTotal, grandQty: grandQty, summary: summary };
     }
 
-    function getSelectedQty() {
-      var selected = document.querySelector('.ticket-type.selected');
-      var input = getQtyInput(selected);
-      if (!input) return 1;
-      var val = parseInt(input.value, 10);
-      if (isNaN(val) || val < 1) return 1;
-      return val;
-    }
-
-    function updateGetTicketsLink() {
-      var selected = document.querySelector('.ticket-type.selected');
-      if (!selected) return;
-      var type = selected.getAttribute('data-ticket-type');
-      var price = parseInt(selected.getAttribute('data-ticket-price')) || 0;
-      var qty = getSelectedQty();
-      var total = price * qty;
+    // Update the checkout button, amounts shown on each card, and the checkout link
+    function updateCheckout() {
+      var cart = getCart();
       var link = document.querySelector('.btn-get-tickets');
-      link.textContent = 'Get Tickets — KES ' + total.toLocaleString();
-      link.href = '/payment?amount=' + total + '&ticketType=' + encodeURIComponent(type) + '&qty=' + qty;
+
+      // Update each card's displayed line total
+      document.querySelectorAll('.ticket-type').forEach(function(el) {
+        var input = el.querySelector('.qty-input');
+        var qty = parseInt(input.value, 10) || 0;
+        var price = parseInt(el.getAttribute('data-ticket-price')) || 0;
+        var totalEl = el.querySelector('.ticket-type-price');
+        if (totalEl) {
+          totalEl.setAttribute('data-total', price * qty);
+          if (qty > 0) {
+            totalEl.textContent = 'KES ' + (price * qty).toLocaleString() + ' (' + qty + ' × KES ' + price.toLocaleString() + ')';
+          } else {
+            totalEl.textContent = 'KES ' + price.toLocaleString();
+          }
+        }
+      });
+
+      // Update checkout button
+      if (cart.grandQty === 0) {
+        link.textContent = 'Select Tickets';
+        link.href = '#';
+        link.classList.add('disabled');
+        return;
+      }
+      link.textContent = 'Get Tickets — KES ' + cart.grandTotal.toLocaleString();
+      link.classList.remove('disabled');
+      link.href = '/payment?amount=' + cart.grandTotal +
+        '&ticketType=' + encodeURIComponent(cart.summary) +
+        '&qty=' + cart.grandQty;
     }
 
+    // Clamp manual input to [min, max]
     function clampQty(input) {
-      var min = parseInt(input.getAttribute('min'), 10) || 1;
+      var min = parseInt(input.getAttribute('min'), 10) || 0;
       var max = parseInt(input.getAttribute('max'), 10) || MAX_QTY;
       if (input.value === '' || input.value === '-') return;
       var val = parseInt(input.value, 10);
@@ -505,21 +547,22 @@
       else if (val > max) input.value = max;
     }
 
+    // Click on a ticket card = visual highlight only, no effect on checkout
     document.querySelectorAll('.ticket-type').forEach(function(el) {
       el.addEventListener('click', function(e) {
         if (e.target.closest('.qty-btn') || e.target.closest('.qty-input') || e.target.closest('.qty-selector')) return;
         document.querySelectorAll('.ticket-type').forEach(function(t) { t.classList.remove('selected'); });
         this.classList.add('selected');
-        updateGetTicketsLink();
       });
     });
 
+    // +/- buttons
     document.querySelectorAll('.qty-btn').forEach(function(btn) {
       btn.addEventListener('click', function(e) {
         e.stopPropagation();
         var selector = this.closest('.qty-selector');
         var input = selector.querySelector('.qty-input');
-        var min = parseInt(input.getAttribute('min'), 10) || 1;
+        var min = parseInt(input.getAttribute('min'), 10) || 0;
         var max = parseInt(input.getAttribute('max'), 10) || MAX_QTY;
         var val = parseInt(input.value, 10) || 0;
         if (this.textContent.trim() === '+') {
@@ -527,20 +570,25 @@
         } else if (val > min) {
           input.value = val - 1;
         }
-        updateGetTicketsLink();
+        updateCheckout();
       });
     });
 
+    // Manual input
     document.querySelectorAll('.qty-input').forEach(function(input) {
       input.addEventListener('change', function() {
         clampQty(this);
-        updateGetTicketsLink();
+        updateCheckout();
       });
       input.addEventListener('input', function() {
-        updateGetTicketsLink();
+        updateCheckout();
       });
     });
 
+    // Initialise checkout on page load
+    updateCheckout();
+
+    // --- Background animations ---
     var watchCount = 1827;
     setInterval(function() {
       watchCount += Math.floor(Math.random() * 3);
