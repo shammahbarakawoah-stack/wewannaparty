@@ -13,3 +13,9 @@ services:
         generateValue: true
       - key: JWT_SECRET
         generateValue: true
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: DOMAIN
+        value: kolawewannaparty.onrender.com
+      - key: FROM_EMAIL
+        sync: false

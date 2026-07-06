@@ -64,6 +64,7 @@ async function initDb() {
     event_venue TEXT NOT NULL,
     customer_name TEXT,
     phone TEXT NOT NULL,
+    email TEXT,
     amount REAL NOT NULL,
     mpesa_code TEXT NOT NULL,
     ticket_type TEXT DEFAULT 'General Access',
@@ -84,6 +85,9 @@ async function initDb() {
       }
       if (!colNames.includes('qty')) {
         db.run("ALTER TABLE bookings ADD COLUMN qty INTEGER DEFAULT 1");
+      }
+      if (!colNames.includes('email')) {
+        db.run("ALTER TABLE bookings ADD COLUMN email TEXT");
       }
     }
   } catch (e) {

@@ -63,14 +63,15 @@ router.get('/payment', (req, res) => {
 router.post('/api/payment/submit', async (req, res) => {
   console.log('[PAYMENT] POST /api/payment/submit - request received');
   try {
-    const { mpesa_code, phone, amount_paid, amount: bodyAmount, full_name, ticket_type, qty, event_name, event_date, event_venue } = req.body;
-    console.log('[PAYMENT] Body received:', JSON.stringify({ mpesa_code, phone, bodyAmount, full_name, ticket_type, qty, event_name, event_date, event_venue }));
+    const { mpesa_code, phone, amount_paid, amount: bodyAmount, full_name, ticket_type, qty, event_name, event_date, event_venue, email } = req.body;
+    console.log('[PAYMENT] Body received:', JSON.stringify({ mpesa_code, phone, bodyAmount, full_name, email, ticket_type, qty, event_name, event_date, event_venue }));
     const parsedAmount = parseFloat(bodyAmount || amount_paid || 0);
 
     const sanitizedCode = sanitize(mpesa_code || '');
     const sanitizedPhone = sanitize(phone || '');
     const sanitizedName = sanitize(full_name || '');
-    console.log('[PAYMENT] Sanitized - code:', sanitizedCode, 'phone:', sanitizedPhone, 'name:', sanitizedName, 'amount:', parsedAmount);
+    const sanitizedEmail = (email || '').trim().toLowerCase();
+    console.log('[PAYMENT] Sanitized - code:', sanitizedCode, 'phone:', sanitizedPhone, 'name:', sanitizedName, 'email:', sanitizedEmail, 'amount:', parsedAmount);
 
     function isJson() { return !!req.is('json'); }
     function jsonOrRedirect(msg, urlMsg) {
@@ -111,6 +112,11 @@ router.post('/api/payment/submit', async (req, res) => {
       return jsonOrRedirect('Full name must be at most 100 characters.');
     }
 
+    if (!sanitizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sanitizedEmail)) {
+      console.log('[PAYMENT] Validation failed: invalid email');
+      return jsonOrRedirect('A valid email address is required.');
+    }
+
     console.log('[PAYMENT] Validation passed, getting database...');
     const db = await getDb();
     const bookingNumber = generateBookingNumber();
@@ -133,14 +139,15 @@ router.post('/api/payment/submit', async (req, res) => {
     console.log('[PAYMENT] Inserting booking into database...');
     const sanitizedTicketType = sanitize(ticket_type || 'General Access');
     const sanitizedQty = parseInt(qty, 10) || 1;
-    db.run(`INSERT INTO bookings (booking_number, event_name, event_date, event_venue, customer_name, phone, amount, mpesa_code, ticket_type, qty, payment_status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`, [
+    db.run(`INSERT INTO bookings (booking_number, event_name, event_date, event_venue, customer_name, phone, email, amount, mpesa_code, ticket_type, qty, payment_status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`, [
         bookingNumber,
         event_name || 'We"R Afro · TheMostWanted & Friends Africa Live Tour',
         event_date || '2026-08-29',
         event_venue || 'Uhuru Gardens, Nairobi',
         sanitizedName,
         sanitizedPhone,
+        sanitizedEmail,
         parsedAmount,
         sanitizedCode,
         sanitizedTicketType,

@@ -329,6 +329,11 @@
             <input type="text" id="full_name" name="full_name" placeholder="Your full name (optional)" />
           </div>
 
+          <div class="form-group">
+            <label for="email">Email Address *</label>
+            <input type="email" id="email" name="email" placeholder="e.g. you@example.com" required />
+          </div>
+
           <button type="submit" class="btn" id="submit-btn">
             Submit Payment
           </button>
@@ -392,10 +397,12 @@
       const phone = document.getElementById('phone').value.trim();
       const amount = document.getElementById('amount').value;
       const fullName = document.getElementById('full_name').value.trim();
+      const email = document.getElementById('email').value.trim();
 
       if (!mpesaCode) { showAlert('error', 'Please enter the M-Pesa Confirmation Code.'); return; }
       if (!phone) { showAlert('error', 'Please enter the phone number used to pay.'); return; }
       if (!amount || amount <= 0) { showAlert('error', 'Please enter a valid amount.'); return; }
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAlert('error', 'Please enter a valid email address.'); return; }
 
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<span class="spinner"></span> Processing...';
@@ -409,6 +416,7 @@
             phone: phone,
             amount: amount,
             full_name: fullName,
+            email: email,
             ticket_type: <%- JSON.stringify(ticketType) %>,
             qty: <%- JSON.stringify(qty) %>,
             event_name: <%- JSON.stringify(eventName || 'WeR Afro · TheMostWanted & Friends Africa Live Tour') %>,

@@ -3,6 +3,7 @@ const router = express.Router();
 const { getDb, saveDb, query } = require('../db');
 const { adminAuth } = require('../middleware/auth');
 const { generateQRPayload, verifyQRPayload } = require('./payments');
+const { sendTicketEmail } = require('../email');
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 
@@ -157,6 +158,11 @@ router.post('/admin/api/payment/:id/approve', adminAuth, async (req, res) => {
     console.log('[APPROVE] Persisting database...');
     saveDb();
     console.log('[APPROVE] Approval complete, tickets:', tickets.map(t => t.ticketNumber));
+
+    // Send email with tickets (non-blocking)
+    sendTicketEmail(booking, tickets).then(sent => {
+      console.log('[APPROVE] Email sent:', sent);
+    });
 
     res.json({
       success: true,

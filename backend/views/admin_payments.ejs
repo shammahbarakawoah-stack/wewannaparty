@@ -236,6 +236,7 @@
             <th>Booking #</th>
             <th>Customer</th>
             <th>Phone</th>
+            <th>Email</th>
             <th>Ticket Type</th>
             <th>Qty</th>
             <th>Amount</th>
@@ -252,6 +253,7 @@
             <td style="font-family:monospace;font-size:12px;"><%= b.booking_number %></td>
             <td><%= b.customer_name || '—' %></td>
             <td><%= b.phone %></td>
+            <td style="font-size:12px;"><%= b.email || '—' %></td>
             <td><%= b.ticket_type || 'General Access' %></td>
             <td style="text-align:center;"><%= b.qty || 1 %></td>
             <td style="font-weight:600;">KES <%= Number(b.amount).toLocaleString() %></td>
