@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My Tickets · WeWannaParty</title>
   <meta name="theme-color" content="#B00000" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -14,34 +16,50 @@
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
       --primary: #B00000;
+      --primary-dark: #8B0000;
+      --primary-light: #FF4444;
       --bg: #0A0A0A;
+      --bg-elevated: #0D0D0D;
       --card: #111111;
+      --card-hover: #1A1A1A;
       --text: #FFFFFF;
       --text-secondary: #A0A0A0;
       --text-muted: #6B6B6B;
-      --border: #222222;
+      --border: #1E1E1E;
+      --border-light: #2A2A2A;
       --success: #10B981;
+      --success-bg: rgba(16,185,129,0.08);
       --warning: #F59E0B;
+      --warning-bg: rgba(245,158,11,0.08);
       --danger: #EF4444;
+      --danger-bg: rgba(239,68,68,0.08);
       --radius: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.4);
+      --shadow-lg: 0 12px 48px rgba(0,0,0,0.5);
     }
-    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-    h1, h2, h3, h4 { font-family: 'Syne', sans-serif; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    h1, h2, h3, h4, h5, h6 { font-family: 'Syne', sans-serif; font-weight: 700; }
     a { color: inherit; text-decoration: none; }
 
+    /* Nav */
     .nav {
-      background: rgba(0,0,0,0.85);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: rgba(10,10,10,0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
       position: sticky;
       top: 0;
       z-index: 100;
+      transition: border-color 0.3s;
     }
     .nav-inner {
-      max-width: 900px;
+      max-width: 960px;
       margin: 0 auto;
       padding: 0 20px;
-      height: 60px;
+      height: 64px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -52,46 +70,76 @@
       gap: 10px;
       font-family: 'Syne', sans-serif;
       font-weight: 800;
-      font-size: 16px;
+      font-size: 17px;
+      letter-spacing: -0.3px;
     }
-    .nav-logo span {
-      background: linear-gradient(135deg, var(--primary), #FF3333);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+    .nav-logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #fff;
     }
-    .nav-links { display: flex; align-items: center; gap: 20px; list-style: none; }
-    .nav-links a { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+    .nav-logo span { background: linear-gradient(135deg, var(--primary), var(--primary-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .nav-links { display: flex; align-items: center; gap: 24px; list-style: none; }
+    .nav-links a { font-size: 13px; font-weight: 500; color: var(--text-secondary); transition: color 0.2s; position: relative; }
     .nav-links a:hover { color: var(--text); }
+    .nav-links a.active { color: var(--text); }
+    .nav-links a.active::after { content: ''; position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); width: 20px; height: 2px; background: var(--primary); border-radius: 1px; }
 
-    .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
-    .page-title { font-size: 24px; font-weight: 800; margin-bottom: 24px; }
+    /* Container */
+    .container { max-width: 960px; margin: 0 auto; padding: 40px 20px 80px; }
 
-    .card {
+    /* Page Header */
+    .page-header { margin-bottom: 32px; animation: fadeSlideUp 0.5s ease both; }
+    .page-header-icon {
+      display: inline-flex; align-items: center; gap: 10px; margin-bottom: 12px;
+    }
+    .page-header-icon svg { width: 24px; height: 24px; color: var(--primary-light); }
+    .page-header h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; }
+    .page-header p { font-size: 14px; color: var(--text-muted); margin-top: 6px; line-height: 1.5; }
+
+    /* Search Box */
+    .search-section { margin-bottom: 32px; animation: fadeSlideUp 0.5s ease 0.1s both; }
+    .search-card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 28px;
-      margin-bottom: 20px;
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      transition: border-color 0.3s, box-shadow 0.3s;
     }
-
-    .form-row { display: flex; gap: 12px; flex-wrap: wrap; }
-    .form-row input {
-      flex: 1;
-      min-width: 180px;
-      padding: 12px 16px;
-      background: rgba(255,255,255,0.04);
+    .search-card:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(176,0,0,0.15); }
+    .search-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 14px; }
+    .search-inputs { display: flex; gap: 12px; flex-wrap: wrap; }
+    .search-input-wrap { flex: 1; min-width: 200px; position: relative; }
+    .search-input-wrap svg {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      width: 16px; height: 16px; color: var(--text-muted); pointer-events: none;
+    }
+    .search-input-wrap input {
+      width: 100%;
+      padding: 13px 14px 13px 40px;
+      background: var(--bg);
       border: 1px solid var(--border);
       border-radius: 10px;
       color: var(--text);
       font-family: 'Inter', sans-serif;
       font-size: 14px;
       outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .form-row input:focus { border-color: var(--primary); }
-    .form-row input::placeholder { color: var(--text-muted); }
-    .form-row button {
-      padding: 12px 28px;
+    .search-input-wrap input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(176,0,0,0.12); }
+    .search-input-wrap input::placeholder { color: var(--text-muted); }
+    .search-divider {
+      display: flex; align-items: center; color: var(--text-muted); font-size: 12px; font-weight: 500;
+      padding: 0 4px;
+    }
+    .btn-search {
+      padding: 13px 32px;
       background: var(--primary);
       color: #fff;
       border: none;
@@ -100,48 +148,199 @@
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
+      transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
     }
-    .form-row button:hover { background: #8B0000; }
-    .form-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-search:hover { background: var(--primary-dark); box-shadow: 0 4px 16px rgba(176,0,0,0.3); }
+    .btn-search:active { transform: scale(0.97); }
+    .btn-search:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
+    /* Results */
+    #results { min-height: 100px; }
+
+    /* Booking / Ticket Cards */
     .booking-card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 24px;
-      margin-bottom: 16px;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      margin-bottom: 20px;
+      animation: fadeSlideUp 0.5s ease both;
+      transition: border-color 0.3s, box-shadow 0.3s;
     }
+    .booking-card:hover { border-color: var(--border-light); }
+
+    /* Booking Header */
     .booking-header {
+      padding: 24px 24px 20px;
+      border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
+      gap: 16px;
       flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 16px;
     }
-    .booking-number { font-family: monospace; font-size: 14px; color: var(--primary-light); font-weight: 600; }
+    .booking-header-left { flex: 1; min-width: 200px; }
+    .booking-event-name { font-size: 17px; font-weight: 700; line-height: 1.3; }
+    .booking-number {
+      font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      letter-spacing: 0.3px;
+    }
+    .booking-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 12px;
+    }
+    .booking-meta-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); }
+    .booking-meta-item svg { width: 14px; height: 14px; flex-shrink: 0; color: var(--text-muted); }
+
+    /* Badge */
     .badge {
-      display: inline-flex; padding: 4px 12px; border-radius: 100px; font-size: 11px; font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
     }
-    .badge-pending { background: rgba(245,158,11,0.1); color: var(--warning); border: 1px solid rgba(245,158,11,0.2); }
-    .badge-paid { background: rgba(16,185,129,0.1); color: var(--success); border: 1px solid rgba(16,185,129,0.2); }
-    .badge-rejected { background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
+    .badge svg { width: 12px; height: 12px; }
+    .badge-paid { background: var(--success-bg); color: var(--success); border: 1px solid rgba(16,185,129,0.2); }
+    .badge-pending { background: var(--warning-bg); color: var(--warning); border: 1px solid rgba(245,158,11,0.2); }
+    .badge-rejected { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
+    .badge-unused { background: rgba(59,130,246,0.08); color: #3B82F6; border: 1px solid rgba(59,130,246,0.2); }
+    .badge-used { background: rgba(107,114,128,0.08); color: #6B7280; border: 1px solid rgba(107,114,128,0.2); }
+    .badge-cancelled { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
 
-    .ticket-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
-    .ticket-card {
-      background: rgba(255,255,255,0.02);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
+    /* Status Banner */
+    .status-banner {
+      padding: 16px 24px;
       text-align: center;
+      font-size: 13px;
+      line-height: 1.6;
     }
-    .ticket-card img { max-width: 180px; margin: 0 auto 12px; display: block; }
-    .ticket-card .number { font-family: monospace; font-size: 12px; color: var(--text-muted); }
-    .ticket-card .type { font-weight: 600; font-size: 14px; margin: 4px 0; }
-    .ticket-card .status { font-size: 12px; }
+    .status-banner svg { width: 20px; height: 20px; margin-bottom: 8px; display: block; margin-left: auto; margin-right: auto; }
+    .status-banner strong { font-size: 14px; display: block; margin-bottom: 2px; }
+    .status-banner-paid { background: var(--success-bg); border-bottom: 1px solid rgba(16,185,129,0.15); color: var(--text-secondary); }
+    .status-banner-paid strong { color: var(--success); }
+    .status-banner-pending { background: var(--warning-bg); border-bottom: 1px solid rgba(245,158,11,0.15); color: var(--text-secondary); }
+    .status-banner-pending strong { color: var(--warning); }
+    .status-banner-rejected { background: var(--danger-bg); border-bottom: 1px solid rgba(239,68,68,0.15); color: var(--text-secondary); }
+    .status-banner-rejected strong { color: var(--danger); }
 
-    .ticket-actions { display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+    /* Ticket Grid */
+    .ticket-grid { padding: 20px 24px 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+
+    /* Ticket Card - Premium */
+    .ticket-card {
+      background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.04) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      position: relative;
+      animation: fadeSlideUp 0.5s ease both;
+      display: flex;
+      flex-direction: column;
+    }
+    .ticket-card:nth-child(1) { animation-delay: 0.15s; }
+    .ticket-card:nth-child(2) { animation-delay: 0.25s; }
+    .ticket-card:nth-child(3) { animation-delay: 0.35s; }
+    .ticket-card:nth-child(4) { animation-delay: 0.45s; }
+    .ticket-card:nth-child(5) { animation-delay: 0.55s; }
+    .ticket-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      border-color: var(--border-light);
+    }
+
+    /* Ticket Tear-off top border */
+    .ticket-card::before {
+      content: '';
+      display: block;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--primary-light));
+    }
+
+    /* Ticket content area */
+    .ticket-inner { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+
+    .ticket-qr-wrap {
+      text-align: center;
+      margin-bottom: 14px;
+      position: relative;
+    }
+    .ticket-qr-wrap img {
+      max-width: 160px;
+      border-radius: 8px;
+      background: #fff;
+      padding: 8px;
+      display: inline-block;
+      transition: transform 0.3s;
+    }
+    .ticket-qr-wrap img:hover { transform: scale(1.05); }
+    .ticket-qr-placeholder {
+      width: 140px;
+      height: 140px;
+      margin: 0 auto;
+      background: rgba(255,255,255,0.03);
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .ticket-number {
+      font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+      font-size: 12px;
+      text-align: center;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .ticket-type-name {
+      text-align: center;
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .ticket-holder {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    .ticket-status {
+      text-align: center;
+      margin-bottom: 14px;
+    }
+
+    .ticket-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
     .ticket-actions a, .ticket-actions button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       padding: 8px 16px;
       border-radius: 8px;
       font-size: 12px;
@@ -151,50 +350,254 @@
       background: transparent;
       color: var(--text-secondary);
       text-decoration: none;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
     }
-    .ticket-actions a:hover, .ticket-actions button:hover { border-color: var(--primary); color: var(--text); }
+    .ticket-actions a svg, .ticket-actions button svg { width: 14px; height: 14px; }
+    .ticket-actions a:hover, .ticket-actions button:hover {
+      border-color: var(--primary);
+      color: var(--text);
+      background: rgba(176,0,0,0.06);
+    }
+    .ticket-actions .btn-primary-action {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .ticket-actions .btn-primary-action:hover {
+      background: var(--primary-dark);
+      border-color: var(--primary-dark);
+      color: #fff;
+    }
 
-    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
-    .empty-state svg { margin-bottom: 16px; opacity: 0.3; }
+    /* Loading & States */
+    .state-box { text-align: center; padding: 60px 20px; }
+    .state-box svg { width: 40px; height: 40px; margin: 0 auto 16px; display: block; }
+    .state-box h3 { font-size: 18px; margin-bottom: 6px; }
+    .state-box p { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
 
-    .loading { text-align: center; padding: 40px; color: var(--text-muted); }
-    .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.1); border-top-color: var(--primary-light); border-radius: 50%; animation: spin 0.6s linear infinite; }
+    .loading-state { animation: pulse 1.5s ease infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .spinner {
+      display: inline-block; width: 22px; height: 22px;
+      border: 2.5px solid rgba(255,255,255,0.08);
+      border-top-color: var(--primary-light);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    @media (max-width: 600px) {
-      .container { padding: 20px 16px; }
-      .card, .booking-card { padding: 20px; }
-      .form-row input { min-width: 100%; }
+    /* Empty state */
+    .empty-state-icon {
+      width: 64px; height: 64px; margin: 0 auto 16px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .empty-state-icon svg { width: 28px; height: 28px; color: var(--text-muted); }
+
+    /* Animations */
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* QR Modal */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-content {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      animation: fadeSlideUp 0.3s ease;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute; top: 14px; right: 14px;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .modal-close:hover { background: rgba(255,255,255,0.1); }
+    .modal-close svg { width: 16px; height: 16px; }
+    .modal-qr-img { max-width: 240px; border-radius: 12px; background: #fff; padding: 12px; margin: 0 auto 16px; }
+    .modal-ticket-num { font-family: monospace; font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+    .modal-event-name { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+    .modal-ticket-type { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+    .modal-actions .btn {
+      padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; border: 1px solid var(--border); background: transparent;
+      color: var(--text-secondary); text-decoration: none; font-family: 'Inter', sans-serif;
+      transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .modal-actions .btn:hover { border-color: var(--primary); color: var(--text); }
+    .modal-actions .btn-primary-custom { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .modal-actions .btn-primary-custom:hover { background: var(--primary-dark); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container { padding: 24px 16px 60px; }
+      .page-header h1 { font-size: 22px; }
+      .search-inputs { flex-direction: column; }
+      .search-divider { text-align: center; padding: 4px 0; }
+      .btn-search { width: 100%; justify-content: center; }
+      .booking-header { padding: 20px; flex-direction: column; }
+      .booking-meta { flex-direction: column; gap: 8px; }
+      .ticket-grid { padding: 16px; grid-template-columns: 1fr; }
+      .ticket-inner { padding: 16px; }
+      .nav-inner { height: 56px; }
+      .nav-links a.active::after { bottom: -17px; }
+    }
+
+    @media (max-width: 480px) {
+      .page-header h1 { font-size: 20px; }
+      .search-card { padding: 18px; }
+      .modal-content { padding: 24px; }
+      .ticket-actions a, .ticket-actions button { flex: 1; justify-content: center; }
+    }
+
+    @media print {
+      .nav, .search-section, .page-header, .ticket-actions, .modal-overlay { display: none !important; }
+      .container { padding: 0; max-width: 100%; }
+      .booking-card { break-inside: avoid; border: 1px solid #ddd; box-shadow: none; }
+      .ticket-card { break-inside: avoid; }
+      body { background: #fff; color: #000; }
+      .ticket-card { background: #fff !important; border-color: #ddd; }
+      .ticket-card::before { background: #B00000; }
+      .ticket-number, .booking-number { color: #666; }
+      .booking-meta-item { color: #444; }
+      .ticket-type-name { color: #000; }
     }
   </style>
+  <script>
+    // QR Modal
+    function openQRModal(ticketId) {
+      const overlay = document.getElementById('qr-modal');
+      const img = document.getElementById('modal-qr-img');
+      const num = document.getElementById('modal-ticket-num');
+      const eventName = document.getElementById('modal-event-name');
+      const type = document.getElementById('modal-ticket-type');
+      const downloadLink = document.getElementById('modal-download-link');
+
+      // Set from data attributes on the clicked element
+      const btn = event.target.closest('[data-ticket-id]') || document.querySelector('[data-ticket-id="' + ticketId + '"]');
+      if (!btn) return;
+      const tid = btn.getAttribute('data-ticket-id');
+      num.textContent = btn.getAttribute('data-ticket-number') || '';
+      eventName.textContent = btn.getAttribute('data-event-name') || '';
+      type.textContent = btn.getAttribute('data-ticket-type') || '';
+
+      img.src = '/api/ticket/' + tid + '/qr-image';
+      img.alt = 'QR Code for ticket ' + (btn.getAttribute('data-ticket-number') || '');
+      downloadLink.href = '/api/ticket/' + tid + '/download';
+
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeQRModal() {
+      document.getElementById('qr-modal').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeQRModal();
+    });
+  </script>
 </head>
 <body>
   <nav class="nav">
     <div class="nav-inner">
       <a href="/" class="nav-logo">
+        <div class="nav-logo-icon">W</div>
         <span>WeWannaParty</span>
       </a>
       <ul class="nav-links">
         <li><a href="/">Events</a></li>
-        <li><a href="/booking/lookup">My Tickets</a></li>
+        <li><a href="/booking/lookup" class="active">My Tickets</a></li>
       </ul>
     </div>
   </nav>
 
   <div class="container">
-    <h1 class="page-title">My Tickets</h1>
-    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Enter your booking number or phone number to view your tickets.</p>
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="page-header-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v2a3 3 0 0 1 3 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3v-6a3 3 0 0 1 3-3V7"/><path d="M21 7H3"/><path d="M9 11h6"/><path d="M10 15h4"/></svg>
+        <span style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--primary-light);">Your Tickets</span>
+      </div>
+      <h1>My Tickets</h1>
+      <p>Enter your booking number or phone number to view your tickets.</p>
+    </div>
 
-    <div class="card">
-      <div class="form-row">
-        <input type="text" id="booking-number" placeholder="Booking Number (e.g. WWP-...)" pattern="[A-Za-z0-9-]{4,}" title="Enter a valid booking number" />
-        <span style="color:var(--text-muted);font-size:13px;display:flex;align-items:center;">or</span>
-        <input type="tel" id="phone-number" placeholder="Phone Number (e.g. 0712345678)" pattern="^(0|\+?254)[0-9]{9,10}$" title="Enter a valid Kenyan phone number" />
-        <button id="lookup-btn" onclick="lookupBooking()">Search</button>
+    <!-- Search -->
+    <div class="search-section">
+      <div class="search-card">
+        <div class="search-label">Find your booking</div>
+        <div class="search-inputs">
+          <div class="search-input-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg>
+            <input type="text" id="booking-number" placeholder="Booking Number (e.g. WWP-...)" pattern="[A-Za-z0-9-]{4,}" title="Enter a valid booking number" autocomplete="off" />
+          </div>
+          <span class="search-divider">or</span>
+          <div class="search-input-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <input type="tel" id="phone-number" placeholder="Phone Number (e.g. 0712345678)" pattern="^(0|\+?254)[0-9]{9,10}$" title="Enter a valid Kenyan phone number" autocomplete="tel" />
+          </div>
+          <button id="lookup-btn" class="btn-search" onclick="lookupBooking()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Search
+          </button>
+        </div>
       </div>
     </div>
 
+    <!-- Results -->
     <div id="results"></div>
+  </div>
+
+  <!-- QR Modal -->
+  <div class="modal-overlay" id="qr-modal" onclick="if(event.target===this)closeQRModal()">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeQRModal()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+      <img id="modal-qr-img" class="modal-qr-img" src="" alt="Ticket QR Code" />
+      <div class="modal-ticket-num" id="modal-ticket-num"></div>
+      <div class="modal-event-name" id="modal-event-name"></div>
+      <div class="modal-ticket-type" id="modal-ticket-type"></div>
+      <div class="modal-actions">
+        <a href="#" id="modal-download-link" class="btn" target="_blank">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download PDF
+        </a>
+        <button class="btn btn-primary-custom" onclick="window.print()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Print
+        </button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -205,13 +608,13 @@
       const results = document.getElementById('results');
 
       if (!bookingNum && !phone) {
-        results.innerHTML = '<div class="empty-state"><p style="color:var(--danger);">Please enter a booking number or phone number.</p></div>';
+        results.innerHTML = '<div class="state-box"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div><h3>Nothing entered</h3><p>Please enter a booking number or phone number to search.</p></div>';
         return;
       }
 
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span> Searching...';
-      results.innerHTML = '<div class="loading"><span class="spinner"></span><p style="margin-top:12px;">Looking up your booking...</p></div>';
+      results.innerHTML = '<div class="state-box loading-state"><span class="spinner"></span><p style="margin-top:16px;">Looking up your booking...</p></div>';
 
       try {
         const res = await fetch('/api/booking/lookup', {
@@ -222,72 +625,91 @@
         const data = await res.json();
 
         if (!data.success) {
-          results.innerHTML = `<div class="empty-state"><p style="color:var(--danger);">${data.message}</p></div>`;
+          results.innerHTML = '<div class="state-box"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div><h3>Not found</h3><p>' + escapeHtml(data.message) + '</p></div>';
           return;
         }
 
         let html = '';
-        data.bookings.forEach(b => {
-          const statusBadge = `badge-${b.payment_status}`;
-          const statusText = b.payment_status === 'paid' ? 'Approved' : b.payment_status.charAt(0).toUpperCase() + b.payment_status.slice(1);
-
-          html += `<div class="booking-card">
-            <div class="booking-header">
-              <div>
-                <div class="booking-number">${b.booking_number}</div>
-                <div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">${b.event_name}</div>
-                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${b.phone} · KES ${Number(b.amount).toLocaleString()}</div>
-              </div>
-              <span class="badge ${statusBadge}">${statusText}</span>
-            </div>`;
-
-          if (b.payment_status === 'paid' && b.tickets && b.tickets.length > 0) {
-            html += `<div style="padding:12px 16px;margin-bottom:16px;text-align:center;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.15);border-radius:8px;">
-              <strong style="color:var(--success);">Payment Approved</strong><br/>
-              <span style="color:var(--text-muted);font-size:13px;">Your ticket is now available. You can download, print, or show the QR code below.</span>
-            </div>
-            <div class="ticket-grid">`;
-            b.tickets.forEach(t => {
-              const tStatus = t.status.charAt(0).toUpperCase() + t.status.slice(1);
-              html += `<div class="ticket-card">
-                <div style="margin-bottom:8px;">
-                  <svg width="80" height="80" viewBox="0 0 100 100" style="margin:0 auto;display:block;">
-                    <rect x="5" y="5" width="90" height="90" rx="8" fill="none" stroke="#333" stroke-width="2"/>
-                    <rect x="25" y="25" width="50" height="50" rx="4" fill="none" stroke="#B00000" stroke-width="1.5"/>
-                    <text x="50" y="55" text-anchor="middle" fill="#B00000" font-family="monospace" font-size="10">TICKET</text>
-                    <text x="50" y="68" text-anchor="middle" fill="#666" font-family="monospace" font-size="6">${t.ticket_number.slice(-8)}</text>
-                  </svg>
-                </div>
-                <div class="number">${t.ticket_number}</div>
-                <div class="type">${t.ticket_type}</div>
-                <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Holder: ${t.holder_name || '—'}</div>
-                <div class="status" style="margin-top:4px;"><span class="badge badge-${t.status}">${tStatus}</span></div>
-                <div class="ticket-actions">
-                  <a href="/api/ticket/${t.id}/download" target="_blank">Download PDF</a>
-                  <a href="/api/ticket/${t.id}/download" target="_blank">Print Ticket</a>
-                  <a href="/api/ticket/${t.id}/qr-image" target="_blank">Show QR</a>
-                </div>
-              </div>`;
-            });
-            html += `</div>`;
-          } else if (b.payment_status === 'pending') {
-            html += `<div style="padding:16px;text-align:center;color:var(--warning);font-size:13px;background:rgba(245,158,11,0.08);border-radius:8px;margin-top:8px;border:1px solid rgba(245,158,11,0.15);">
-              <strong>Payment Under Review</strong><br/><span style="color:var(--text-muted);">Your payment has been received and is being verified. You will receive your ticket once approved.</span></div>`;
-          } else if (b.payment_status === 'rejected') {
-            html += `<div style="padding:16px;text-align:center;color:var(--danger);font-size:13px;background:rgba(239,68,68,0.08);border-radius:8px;margin-top:8px;border:1px solid rgba(239,68,68,0.15);">
-              <strong>Payment could not be verified.</strong><br/><span style="color:var(--text-muted);">Please contact support. ${b.rejection_reason ? 'Reason: ' + b.rejection_reason : ''}</span></div>`;
+        data.bookings.forEach(function(b, bi) {
+          var statusClass = b.payment_status;
+          var statusLabel = statusClass === 'paid' ? 'Approved' : statusClass.charAt(0).toUpperCase() + statusClass.slice(1);
+          var badgeIcon = statusClass === 'paid' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+          var statusText = '';
+          var statusBannerClass = '';
+          if (statusClass === 'paid') {
+            statusText = 'Your ticket is now available.';
+            statusBannerClass = 'status-banner-paid';
+          } else if (statusClass === 'pending') {
+            statusText = 'Your payment has been received and is being verified.';
+            statusBannerClass = 'status-banner-pending';
+          } else if (statusClass === 'rejected') {
+            statusText = 'Please contact support.' + (b.rejection_reason ? ' Reason: ' + escapeHtml(b.rejection_reason) : '');
+            statusBannerClass = 'status-banner-rejected';
           }
-          html += `</div>`;
+
+          html += '<div class="booking-card" style="animation-delay:' + (bi * 0.1) + 's">';
+          html += '<div class="booking-header">';
+          html += '<div class="booking-header-left">';
+          html += '<div class="booking-event-name">' + escapeHtml(b.event_name) + '</div>';
+          html += '<div class="booking-number">' + escapeHtml(b.booking_number) + '</div>';
+          html += '<div class="booking-meta">';
+          html += '<span class="booking-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' + escapeHtml(b.ticket_type || 'General Access') + ' &times; ' + (b.qty || 1) + '</span>';
+          html += '<span class="booking-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' + escapeHtml(b.event_date) + '</span>';
+          html += '<span class="booking-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + escapeHtml(b.event_venue) + '</span>';
+          html += '<span class="booking-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' + escapeHtml(b.phone) + '</span>';
+          html += '</div></div>';
+          html += '<span class="badge badge-' + statusClass + '">' + badgeIcon + statusLabel + '</span>';
+          html += '</div>';
+
+          if (statusClass === 'paid' && b.tickets && b.tickets.length > 0) {
+            html += '<div class="status-banner ' + statusBannerClass + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><strong>Payment Approved</strong>' + escapeHtml(statusText) + '</div>';
+            html += '<div class="ticket-grid">';
+            b.tickets.forEach(function(t, ti) {
+              var tStatusLabel = t.status.charAt(0).toUpperCase() + t.status.slice(1);
+              html += '<div class="ticket-card" style="animation-delay:' + ((bi * 0.1) + (ti * 0.1) + 0.15) + 's">';
+              html += '<div class="ticket-inner">';
+              html += '<div class="ticket-qr-wrap">';
+              html += '<img src="/api/ticket/' + t.id + '/qr-image" alt="QR Code for ' + escapeHtml(t.ticket_number) + '" loading="lazy" onerror="this.parentNode.innerHTML=\'<div class=ticket-qr-placeholder>QR unavailable</div>\'" />';
+              html += '</div>';
+              html += '<div class="ticket-number">' + escapeHtml(t.ticket_number) + '</div>';
+              html += '<div class="ticket-type-name">' + escapeHtml(t.ticket_type) + '</div>';
+              html += '<div class="ticket-holder">Holder: ' + escapeHtml(t.holder_name || '—') + '</div>';
+              html += '<div class="ticket-status"><span class="badge badge-' + t.status + '">' + tStatusLabel + '</span></div>';
+              html += '<div class="ticket-actions">';
+              html += '<a href="/api/ticket/' + t.id + '/download" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download</a>';
+              html += '<a href="/api/ticket/' + t.id + '/qr-image" target="_blank" data-ticket-id="' + t.id + '" data-ticket-number="' + escapeHtml(t.ticket_number) + '" data-event-name="' + escapeHtml(b.event_name) + '" data-ticket-type="' + escapeHtml(t.ticket_type) + '" onclick="event.preventDefault();openQRModal(\'' + t.id + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg> Show QR</a>';
+              html += '</div></div></div>';
+            });
+            html += '</div>';
+          } else if (statusClass === 'pending') {
+            html += '<div class="status-banner ' + statusBannerClass + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><strong>Payment Under Review</strong>' + escapeHtml(statusText) + '</div>';
+          } else if (statusClass === 'rejected') {
+            html += '<div class="status-banner ' + statusBannerClass + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><strong>Payment could not be verified</strong>' + escapeHtml(statusText) + '</div>';
+          }
+          html += '</div>';
         });
 
         results.innerHTML = html;
       } catch (err) {
-        results.innerHTML = '<div class="empty-state"><p style="color:var(--danger);">Network error. Please try again.</p></div>';
+        results.innerHTML = '<div class="state-box"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><h3>Network error</h3><p>Could not reach the server. Please check your connection and try again.</p></div>';
       } finally {
         btn.disabled = false;
-        btn.innerHTML = 'Search';
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Search';
       }
     }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      var div = document.createElement('div');
+      div.appendChild(document.createTextNode(str));
+      return div.innerHTML;
+    }
+
+    // Allow Enter key to trigger search
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('booking-number').addEventListener('keydown', function(e) { if (e.key === 'Enter') lookupBooking(); });
+      document.getElementById('phone-number').addEventListener('keydown', function(e) { if (e.key === 'Enter') lookupBooking(); });
+    });
   </script>
 </body>
 </html>
