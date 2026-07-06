@@ -162,6 +162,7 @@ router.get('/api/booking/:bookingNumber', async (req, res) => {
     const row = rows[0];
     res.json({ success: true, bookingNumber: row.booking_number, status: row.payment_status });
   } catch (err) {
+    console.error('[BOOKING] Error fetching booking:', err.message, err.stack);
     res.json({ success: false, message: 'Error fetching booking.' });
   }
 });

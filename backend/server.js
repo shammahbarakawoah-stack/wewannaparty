@@ -24,6 +24,19 @@ app.set('views', path.join(__dirname, 'views'));
 // Security headers
 if (helmet) app.use(helmet());
 
+// Domain redirect: wewannaparty.africa -> kolawewannaparty.onrender.com
+app.use((req, res, next) => {
+  const host = req.headers.host || '';
+  const targetDomain = 'kolawewannaparty.onrender.com';
+  const oldDomains = ['wewannaparty.africa', 'www.wewannaparty.africa', 'wewannaparty.onrender.com'];
+  if (oldDomains.some(d => host.toLowerCase() === d || host.toLowerCase() === 'www.' + d)) {
+    const query = req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '';
+    const path = req.path;
+    return res.redirect(301, 'https://' + targetDomain + path + query);
+  }
+  next();
+});
+
 // Session
 app.use(session({
   secret: process.env.SESSION_SECRET || 'wewannaparty-session-secret-2026',
@@ -90,6 +103,7 @@ app.get('/api/ticket/:id/qr', async (req, res) => {
 
     res.json({ success: true, qrImage, ticketNumber: ticket.ticket_number });
   } catch (err) {
+    console.error('[QR] Error generating QR:', err.message, err.stack);
     res.json({ success: false, message: 'Error generating QR.' });
   }
 });
@@ -143,6 +157,7 @@ app.get('/api/ticket/:id/qr-image', async (req, res) => {
     </body></html>`;
     res.send(html);
   } catch (err) {
+    console.error('[QR-IMAGE] Error:', err.message, err.stack);
     res.status(500).send('Error generating QR page.');
   }
 });
@@ -215,6 +230,7 @@ app.get('/api/ticket/:id/download', async (req, res) => {
     </body></html>`;
     res.send(html);
   } catch (err) {
+    console.error('[DOWNLOAD] Error generating ticket:', err.message, err.stack);
     res.status(500).send('Error generating ticket.');
   }
 });

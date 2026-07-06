@@ -240,7 +240,11 @@
             </div>`;
 
           if (b.payment_status === 'paid' && b.tickets && b.tickets.length > 0) {
-            html += `<div class="ticket-grid">`;
+            html += `<div style="padding:12px 16px;margin-bottom:16px;text-align:center;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.15);border-radius:8px;">
+              <strong style="color:var(--success);">Payment Approved</strong><br/>
+              <span style="color:var(--text-muted);font-size:13px;">Your ticket is now available. You can download, print, or show the QR code below.</span>
+            </div>
+            <div class="ticket-grid">`;
             b.tickets.forEach(t => {
               const tStatus = t.status.charAt(0).toUpperCase() + t.status.slice(1);
               html += `<div class="ticket-card">
@@ -258,17 +262,18 @@
                 <div class="status" style="margin-top:4px;"><span class="badge badge-${t.status}">${tStatus}</span></div>
                 <div class="ticket-actions">
                   <a href="/api/ticket/${t.id}/download" target="_blank">Download PDF</a>
+                  <a href="/api/ticket/${t.id}/download" target="_blank">Print Ticket</a>
                   <a href="/api/ticket/${t.id}/qr-image" target="_blank">Show QR</a>
                 </div>
               </div>`;
             });
             html += `</div>`;
           } else if (b.payment_status === 'pending') {
-            html += `<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:13px;background:rgba(245,158,11,0.05);border-radius:8px;margin-top:8px;">
-              Your payment is awaiting verification. Tickets will appear here once approved.</div>`;
+            html += `<div style="padding:16px;text-align:center;color:var(--warning);font-size:13px;background:rgba(245,158,11,0.08);border-radius:8px;margin-top:8px;border:1px solid rgba(245,158,11,0.15);">
+              <strong>Payment Under Review</strong><br/><span style="color:var(--text-muted);">Your payment has been received and is being verified. You will receive your ticket once approved.</span></div>`;
           } else if (b.payment_status === 'rejected') {
-            html += `<div style="padding:16px;text-align:center;color:var(--danger);font-size:13px;background:rgba(239,68,68,0.05);border-radius:8px;margin-top:8px;">
-              Payment was rejected. ${b.rejection_reason ? 'Reason: ' + b.rejection_reason : ''}</div>`;
+            html += `<div style="padding:16px;text-align:center;color:var(--danger);font-size:13px;background:rgba(239,68,68,0.08);border-radius:8px;margin-top:8px;border:1px solid rgba(239,68,68,0.15);">
+              <strong>Payment could not be verified.</strong><br/><span style="color:var(--text-muted);">Please contact support. ${b.rejection_reason ? 'Reason: ' + b.rejection_reason : ''}</span></div>`;
           }
           html += `</div>`;
         });

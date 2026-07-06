@@ -56,7 +56,7 @@ router.post('/admin/login', async (req, res) => {
     req.session.adminToken = generateToken({ id: admin.id, username: admin.username, role: admin.role });
     res.redirect('/admin/dashboard');
   } catch (err) {
-    console.error('Login error:', err);
+    console.error('[ADMIN] Login error:', err.message, err.stack);
     res.render('admin_login', { error: 'An error occurred.' });
   }
 });
@@ -87,7 +87,7 @@ router.get('/admin/dashboard', adminAuth, async (req, res) => {
       totalRevenue: revenue
     });
   } catch (err) {
-    console.error('Dashboard error:', err);
+    console.error('[ADMIN] Dashboard error:', err.message, err.stack);
     res.send('Error loading dashboard.');
   }
 });
@@ -99,7 +99,7 @@ router.get('/admin/payments', adminAuth, async (req, res) => {
 
     res.render('admin_payments', { admin: req.admin, bookings, filter: req.query.status || 'all' });
   } catch (err) {
-    console.error('Payments error:', err);
+    console.error('[ADMIN] Payments error:', err.message, err.stack);
     res.send('Error loading payments.');
   }
 });
@@ -190,7 +190,7 @@ router.post('/admin/api/payment/:id/reject', adminAuth, async (req, res) => {
 
     res.json({ success: true, message: 'Payment rejected.' });
   } catch (err) {
-    console.error('Reject error:', err);
+    console.error('[ADMIN] Reject error:', err.message, err.stack);
     res.json({ success: false, message: 'Error rejecting payment.' });
   }
 });
@@ -215,7 +215,7 @@ router.get('/admin/tickets', adminAuth, async (req, res) => {
 
     res.render('admin_tickets', { admin: req.admin, tickets, search });
   } catch (err) {
-    console.error('Tickets error:', err);
+    console.error('[ADMIN] Tickets error:', err.message, err.stack);
     res.send('Error loading tickets.');
   }
 });
@@ -239,6 +239,7 @@ router.post('/admin/api/ticket/:id/cancel', adminAuth, async (req, res) => {
 
     res.json({ success: true, message: 'Ticket cancelled.' });
   } catch (err) {
+    console.error('[ADMIN] Cancel error:', err.message, err.stack);
     res.json({ success: false, message: 'Error cancelling ticket.' });
   }
 });
@@ -269,6 +270,7 @@ router.post('/admin/api/ticket/:id/reissue', adminAuth, async (req, res) => {
 
     res.json({ success: true, message: 'Ticket reissued.', ticketNumber: newTicketNumber });
   } catch (err) {
+    console.error('[ADMIN] Reissue error:', err.message, err.stack);
     res.json({ success: false, message: 'Error reissuing ticket.' });
   }
 });
@@ -350,7 +352,7 @@ router.post('/admin/api/scan', adminAuth, async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('Scan error:', err);
+    console.error('[ADMIN] Scan error:', err.message, err.stack);
     res.json({ success: false, message: 'Error scanning ticket.' });
   }
 });
@@ -389,7 +391,7 @@ router.post('/admin/api/ticket/:id/checkin', adminAuth, async (req, res) => {
 
     res.json({ success: true, message: 'Check-in successful.' });
   } catch (err) {
-    console.error('Check-in error:', err);
+    console.error('[ADMIN] Check-in error:', err.message, err.stack);
     res.json({ success: false, message: 'Error checking in ticket.' });
   }
 });
