@@ -22,7 +22,17 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 // Security headers
-if (helmet) app.use(helmet());
+if (helmet) {
+  app.use(helmet({
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
+      },
+    },
+  }));
+}
 
 // Domain redirect: old domains -> kolawewannaparty.onrender.com + HTTP -> HTTPS
 app.use((req, res, next) => {
