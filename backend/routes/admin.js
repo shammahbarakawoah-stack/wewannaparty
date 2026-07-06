@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { query } = require('../db');
+const { getDb, saveDb, query } = require('../db');
 const { adminAuth } = require('../middleware/auth');
 const { generateQRPayload, verifyQRPayload } = require('./payments');
 const { sendTicketEmail } = require('../email');
@@ -41,7 +41,8 @@ router.post('/admin/login', async (req, res) => {
     }
 
     const bcrypt = require('bcryptjs');
-    const admins = await query(`SELECT * FROM admins WHERE username = $1`, [sanitize(username)]);
+    const db = await getDb();
+    const admins = query(`SELECT * FROM admins WHERE username = ?`, [sanitize(username)]);
     if (admins.length === 0) {
       return res.render('admin_login', { error: 'Invalid credentials.' });
     }
@@ -68,10 +69,11 @@ router.get('/admin/logout', (req, res) => {
 
 router.get('/admin/dashboard', adminAuth, async (req, res) => {
   try {
-    const pending = await query(`SELECT COUNT(*)::int as cnt FROM bookings WHERE payment_status = 'pending'`);
-    const approved = await query(`SELECT COUNT(*)::int as cnt FROM bookings WHERE payment_status = 'paid'`);
-    const totalTickets = await query(`SELECT COUNT(*)::int as cnt FROM tickets`);
-    const totalRevenue = await query(`SELECT COALESCE(SUM(amount), 0) as total FROM bookings WHERE payment_status = 'paid'`);
+    const db = await getDb();
+    const pending = query(`SELECT COUNT(*) as cnt FROM bookings WHERE payment_status = 'pending'`);
+    const approved = query(`SELECT COUNT(*) as cnt FROM bookings WHERE payment_status = 'paid'`);
+    const totalTickets = query(`SELECT COUNT(*) as cnt FROM tickets`);
+    const totalRevenue = query(`SELECT COALESCE(SUM(amount), 0) as total FROM bookings WHERE payment_status = 'paid'`);
 
     const pCount = pending[0]?.cnt || 0;
     const aCount = approved[0]?.cnt || 0;
@@ -93,7 +95,8 @@ router.get('/admin/dashboard', adminAuth, async (req, res) => {
 
 router.get('/admin/payments', adminAuth, async (req, res) => {
   try {
-    const bookings = await query(`SELECT * FROM bookings ORDER BY created_at DESC`);
+    const db = await getDb();
+    const bookings = query(`SELECT * FROM bookings ORDER BY created_at DESC`);
 
     res.render('admin_payments', { admin: req.admin, bookings, filter: req.query.status || 'all' });
   } catch (err) {
@@ -105,6 +108,7 @@ router.get('/admin/payments', adminAuth, async (req, res) => {
 router.post('/admin/api/payment/:id/approve', adminAuth, async (req, res) => {
   console.log('[APPROVE] POST /admin/api/payment/:id/approve - booking ID:', req.params.id);
   try {
+    const db = await getDb();
     const bookingId = parseInt(req.params.id, 10);
 
     if (!bookingId || isNaN(bookingId)) {
@@ -112,7 +116,7 @@ router.post('/admin/api/payment/:id/approve', adminAuth, async (req, res) => {
       return res.json({ success: false, message: 'Invalid booking ID.' });
     }
 
-    const bResult = await query(`SELECT * FROM bookings WHERE id = $1`, [bookingId]);
+    const bResult = query(`SELECT * FROM bookings WHERE id = ?`, [bookingId]);
     if (bResult.length === 0) {
       console.log('[APPROVE] Booking not found:', bookingId);
       return res.json({ success: false, message: 'Booking not found.' });
@@ -125,14 +129,14 @@ router.post('/admin/api/payment/:id/approve', adminAuth, async (req, res) => {
       return res.json({ success: false, message: 'Payment already approved.' });
     }
 
-    const existingTickets = await query(`SELECT id FROM tickets WHERE booking_id = $1`, [bookingId]);
+    const existingTickets = query(`SELECT id FROM tickets WHERE booking_id = ?`, [bookingId]);
     if (existingTickets.length > 0) {
       console.log('[APPROVE] Tickets already exist for this booking');
       return res.json({ success: false, message: 'Tickets have already been generated for this booking.' });
     }
 
     console.log('[APPROVE] Updating payment status to paid...');
-    await query(`UPDATE bookings SET payment_status = 'paid', updated_at = NOW() WHERE id = $1`, [bookingId]);
+    db.run(`UPDATE bookings SET payment_status = 'paid', updated_at = datetime('now') WHERE id = ?`, [bookingId]);
 
     const ticketType = booking.ticket_type || 'General Access';
     const qty = booking.qty || 1;
@@ -146,11 +150,13 @@ router.post('/admin/api/payment/:id/approve', adminAuth, async (req, res) => {
       const qrHash = crypto.createHash('sha256').update(qrPayload).digest('hex');
 
       console.log('[APPROVE] Inserting ticket', i + 1, '- number:', ticketNumber);
-      await query(`INSERT INTO tickets (ticket_number, booking_id, event_name, ticket_type, holder_name, qr_payload, qr_hash, status)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, 'unused')`, [ticketNumber, bookingId, booking.event_name, ticketType, booking.customer_name, qrPayload, qrHash]);
+      db.run(`INSERT INTO tickets (ticket_number, booking_id, event_name, ticket_type, holder_name, qr_payload, qr_hash, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'unused')`, [ticketNumber, bookingId, booking.event_name, ticketType, booking.customer_name, qrPayload, qrHash]);
       tickets.push({ ticketNumber, qrPayload });
     }
 
+    console.log('[APPROVE] Persisting database...');
+    saveDb();
     console.log('[APPROVE] Approval complete, tickets:', tickets.map(t => t.ticketNumber));
 
     // Send email with tickets (non-blocking)
@@ -171,6 +177,7 @@ router.post('/admin/api/payment/:id/approve', adminAuth, async (req, res) => {
 
 router.post('/admin/api/payment/:id/reject', adminAuth, async (req, res) => {
   try {
+    const db = await getDb();
     const bookingId = parseInt(req.params.id, 10);
 
     if (!bookingId || isNaN(bookingId)) {
@@ -179,12 +186,13 @@ router.post('/admin/api/payment/:id/reject', adminAuth, async (req, res) => {
 
     const reason = sanitize(req.body.reason || 'Payment verification failed.');
 
-    const bResult = await query(`SELECT * FROM bookings WHERE id = $1`, [bookingId]);
+    const bResult = query(`SELECT * FROM bookings WHERE id = ?`, [bookingId]);
     if (bResult.length === 0) {
       return res.json({ success: false, message: 'Booking not found.' });
     }
 
-    await query(`UPDATE bookings SET payment_status = 'rejected', rejection_reason = $1, updated_at = NOW() WHERE id = $2`, [reason, bookingId]);
+    db.run(`UPDATE bookings SET payment_status = 'rejected', rejection_reason = ?, updated_at = datetime('now') WHERE id = ?`, [reason, bookingId]);
+    saveDb();
 
     res.json({ success: true, message: 'Payment rejected.' });
   } catch (err) {
@@ -195,6 +203,7 @@ router.post('/admin/api/payment/:id/reject', adminAuth, async (req, res) => {
 
 router.get('/admin/tickets', adminAuth, async (req, res) => {
   try {
+    const db = await getDb();
     const search = req.query.search || '';
 
     let sqlStr = `SELECT t.*, b.booking_number, b.phone, b.customer_name as b_customer
@@ -202,12 +211,13 @@ router.get('/admin/tickets', adminAuth, async (req, res) => {
     let params = [];
 
     if (search) {
-      sqlStr += ` WHERE t.ticket_number LIKE $1 OR b.booking_number LIKE $1 OR t.qr_payload LIKE $1 OR b.phone LIKE $1 OR b.customer_name LIKE $1`;
-      params = [`%${search}%`];
+      sqlStr += ` WHERE t.ticket_number LIKE ? OR b.booking_number LIKE ? OR t.qr_payload LIKE ? OR b.phone LIKE ? OR b.customer_name LIKE ?`;
+      const s = `%${search}%`;
+      params = [s, s, s, s, s];
     }
     sqlStr += ` ORDER BY t.created_at DESC`;
 
-    const tickets = await query(sqlStr, params);
+    const tickets = query(sqlStr, params);
 
     res.render('admin_tickets', { admin: req.admin, tickets, search });
   } catch (err) {
@@ -218,18 +228,20 @@ router.get('/admin/tickets', adminAuth, async (req, res) => {
 
 router.post('/admin/api/ticket/:id/cancel', adminAuth, async (req, res) => {
   try {
+    const db = await getDb();
     const ticketId = parseInt(req.params.id, 10);
 
     if (!ticketId || isNaN(ticketId)) {
       return res.json({ success: false, message: 'Invalid ticket ID.' });
     }
 
-    const existing = await query(`SELECT id FROM tickets WHERE id = $1`, [ticketId]);
+    const existing = query(`SELECT id FROM tickets WHERE id = ?`, [ticketId]);
     if (existing.length === 0) {
       return res.json({ success: false, message: 'Ticket not found.' });
     }
 
-    await query(`UPDATE tickets SET status = 'cancelled' WHERE id = $1`, [ticketId]);
+    db.run(`UPDATE tickets SET status = 'cancelled' WHERE id = ?`, [ticketId]);
+    saveDb();
 
     res.json({ success: true, message: 'Ticket cancelled.' });
   } catch (err) {
@@ -240,13 +252,14 @@ router.post('/admin/api/ticket/:id/cancel', adminAuth, async (req, res) => {
 
 router.post('/admin/api/ticket/:id/reissue', adminAuth, async (req, res) => {
   try {
+    const db = await getDb();
     const ticketId = parseInt(req.params.id, 10);
 
     if (!ticketId || isNaN(ticketId)) {
       return res.json({ success: false, message: 'Invalid ticket ID.' });
     }
 
-    const result = await query(`SELECT * FROM tickets WHERE id = $1`, [ticketId]);
+    const result = query(`SELECT * FROM tickets WHERE id = ?`, [ticketId]);
     if (result.length === 0) {
       return res.json({ success: false, message: 'Ticket not found.' });
     }
@@ -258,7 +271,8 @@ router.post('/admin/api/ticket/:id/reissue', adminAuth, async (req, res) => {
     const newPayload = generateQRPayload(newTicketNumber, newSecret);
     const newHash = crypto.createHash('sha256').update(newPayload).digest('hex');
 
-    await query(`UPDATE tickets SET ticket_number = $1, qr_payload = $2, qr_hash = $3, status = 'unused', checked_in_at = NULL, checked_in_by = NULL, device_used = NULL WHERE id = $4`, [newTicketNumber, newPayload, newHash, ticketId]);
+    db.run(`UPDATE tickets SET ticket_number = ?, qr_payload = ?, qr_hash = ?, status = 'unused', checked_in_at = NULL, checked_in_by = NULL, device_used = NULL WHERE id = ?`, [newTicketNumber, newPayload, newHash, ticketId]);
+    saveDb();
 
     res.json({ success: true, message: 'Ticket reissued.', ticketNumber: newTicketNumber });
   } catch (err) {
@@ -273,6 +287,7 @@ router.get('/admin/scanner', adminAuth, (req, res) => {
 
 router.post('/admin/api/scan', adminAuth, async (req, res) => {
   try {
+    const db = await getDb();
     const { qr_data } = req.body;
     const scannedBy = req.admin.username;
     const deviceInfo = req.headers['user-agent'] || 'unknown';
@@ -283,31 +298,36 @@ router.post('/admin/api/scan', adminAuth, async (req, res) => {
 
     const parsedQR = verifyQRPayload(qr_data);
     if (!parsedQR) {
-      await query(`INSERT INTO scan_logs (ticket_id, action, scanned_by, device_info, details) VALUES (0, 'invalid', $1, $2, $3)`, [scannedBy, deviceInfo, 'Invalid QR code format scanned']);
+      db.run(`INSERT INTO scan_logs (ticket_id, action, scanned_by, device_info, details) VALUES (0, 'invalid', ?, ?, ?)`, [scannedBy, deviceInfo, 'Invalid QR code format scanned']);
+      saveDb();
       return res.json({ success: false, message: 'Invalid Ticket', code: 'invalid' });
     }
 
-    const result = await query(`SELECT t.*, b.booking_number, b.phone, b.event_name FROM tickets t JOIN bookings b ON t.booking_id = b.id WHERE t.qr_payload = $1`, [qr_data]);
+    const result = query(`SELECT t.*, b.booking_number, b.phone, b.event_name FROM tickets t JOIN bookings b ON t.booking_id = b.id WHERE t.qr_payload = ?`, [qr_data]);
 
     if (result.length === 0) {
-      await query(`INSERT INTO scan_logs (ticket_id, action, scanned_by, device_info, details) VALUES (0, 'invalid', $1, $2, $3)`, [scannedBy, deviceInfo, 'Invalid QR code scanned']);
+      db.run(`INSERT INTO scan_logs (ticket_id, action, scanned_by, device_info, details) VALUES (0, 'invalid', ?, ?, ?)`, [scannedBy, deviceInfo, 'Invalid QR code scanned']);
+      saveDb();
       return res.json({ success: false, message: 'Invalid Ticket', code: 'invalid' });
     }
 
     const ticket = result[0];
 
     if (ticket.ticket_number !== parsedQR.ticketNumber) {
-      await query(`INSERT INTO scan_logs (ticket_id, action, scanned_by, device_info, details) VALUES ($1, 'invalid', $2, $3, $4)`, [ticket.id, scannedBy, deviceInfo, 'QR payload ticket number mismatch']);
+      db.run(`INSERT INTO scan_logs (ticket_id, action, scanned_by, device_info, details) VALUES (?, 'invalid', ?, ?, ?)`, [ticket.id, scannedBy, deviceInfo, 'QR payload ticket number mismatch']);
+      saveDb();
       return res.json({ success: false, message: 'Invalid Ticket', code: 'invalid' });
     }
 
     if (ticket.status === 'cancelled') {
-      await query(`INSERT INTO scan_logs (ticket_id, action, scanned_by, device_info, details) VALUES ($1, 'cancelled', $2, $3, $4)`, [ticket.id, scannedBy, deviceInfo, 'Attempted scan of cancelled ticket']);
+      db.run(`INSERT INTO scan_logs (ticket_id, action, scanned_by, device_info, details) VALUES (?, 'cancelled', ?, ?, ?)`, [ticket.id, scannedBy, deviceInfo, 'Attempted scan of cancelled ticket']);
+      saveDb();
       return res.json({ success: false, message: 'Cancelled Ticket', code: 'cancelled' });
     }
 
     if (ticket.status === 'used') {
-      await query(`INSERT INTO scan_logs (ticket_id, action, scanned_by, device_info, details) VALUES ($1, 're-scan', $2, $3, $4)`, [ticket.id, scannedBy, deviceInfo, `Already used - first check-in: ${ticket.checked_in_at}`]);
+      db.run(`INSERT INTO scan_logs (ticket_id, action, scanned_by, device_info, details) VALUES (?, 're-scan', ?, ?, ?)`, [ticket.id, scannedBy, deviceInfo, `Already used - first check-in: ${ticket.checked_in_at}`]);
+      saveDb();
       return res.json({
         success: false,
         message: 'This ticket has already been used.',
@@ -345,6 +365,7 @@ router.post('/admin/api/scan', adminAuth, async (req, res) => {
 
 router.post('/admin/api/ticket/:id/checkin', adminAuth, async (req, res) => {
   try {
+    const db = await getDb();
     const ticketId = parseInt(req.params.id, 10);
 
     if (!ticketId || isNaN(ticketId)) {
@@ -354,7 +375,7 @@ router.post('/admin/api/ticket/:id/checkin', adminAuth, async (req, res) => {
     const scannedBy = req.admin.username;
     const deviceInfo = req.headers['user-agent'] || 'unknown';
 
-    const result = await query(`SELECT t.*, b.payment_status FROM tickets t JOIN bookings b ON t.booking_id = b.id WHERE t.id = $1`, [ticketId]);
+    const result = query(`SELECT t.*, b.payment_status FROM tickets t JOIN bookings b ON t.booking_id = b.id WHERE t.id = ?`, [ticketId]);
     if (result.length === 0) {
       return res.json({ success: false, message: 'Ticket not found.' });
     }
@@ -369,9 +390,10 @@ router.post('/admin/api/ticket/:id/checkin', adminAuth, async (req, res) => {
       return res.json({ success: false, message: 'Ticket has already been used or cancelled.' });
     }
 
-    await query(`UPDATE tickets SET status = 'used', checked_in_at = NOW(), checked_in_by = $1, device_used = $2 WHERE id = $3 AND status = 'unused'`, [scannedBy, deviceInfo, ticketId]);
+    db.run(`UPDATE tickets SET status = 'used', checked_in_at = datetime('now'), checked_in_by = ?, device_used = ? WHERE id = ? AND status = 'unused'`, [scannedBy, deviceInfo, ticketId]);
 
-    await query(`INSERT INTO scan_logs (ticket_id, action, scanned_by, device_info, details) VALUES ($1, 'check-in', $2, $3, 'Successful check-in')`, [ticketId, scannedBy, deviceInfo]);
+    db.run(`INSERT INTO scan_logs (ticket_id, action, scanned_by, device_info, details) VALUES (?, 'check-in', ?, ?, 'Successful check-in')`, [ticketId, scannedBy, deviceInfo]);
+    saveDb();
 
     res.json({ success: true, message: 'Check-in successful.' });
   } catch (err) {
