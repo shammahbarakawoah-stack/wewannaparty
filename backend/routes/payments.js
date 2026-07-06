@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getDb, saveDb, query } = require('../db');
+const { query } = require('../db');
 const { v4: uuidv4 } = require('uuid');
 const crypto = require('crypto');
 
@@ -117,20 +117,18 @@ router.post('/api/payment/submit', async (req, res) => {
       return jsonOrRedirect('A valid email address is required.');
     }
 
-    console.log('[PAYMENT] Validation passed, getting database...');
-    const db = await getDb();
     const bookingNumber = generateBookingNumber();
     console.log('[PAYMENT] Generated booking number:', bookingNumber);
 
     console.log('[PAYMENT] Checking for duplicate M-Pesa code:', sanitizedCode);
-    const existing = query(`SELECT id FROM bookings WHERE mpesa_code = ?`, [sanitizedCode]);
+    const existing = await query(`SELECT id FROM bookings WHERE mpesa_code = $1`, [sanitizedCode]);
     if (existing.length > 0) {
       console.log('[PAYMENT] Duplicate M-Pesa code detected');
       return jsonOrRedirect('This M-Pesa Confirmation Code has already been used.');
     }
 
     console.log('[PAYMENT] Checking for recent duplicate payment');
-    const recentDupe = query(`SELECT id FROM bookings WHERE phone = ? AND amount = ? AND created_at >= datetime('now', '-5 minutes')`, [sanitizedPhone, parsedAmount]);
+    const recentDupe = await query(`SELECT id FROM bookings WHERE phone = $1 AND amount = $2 AND created_at >= NOW() - INTERVAL '5 minutes'`, [sanitizedPhone, parsedAmount]);
     if (recentDupe.length > 0) {
       console.log('[PAYMENT] Recent duplicate payment detected');
       return jsonOrRedirect('A similar payment was submitted recently. Please wait for confirmation.');
@@ -139,8 +137,8 @@ router.post('/api/payment/submit', async (req, res) => {
     console.log('[PAYMENT] Inserting booking into database...');
     const sanitizedTicketType = sanitize(ticket_type || 'General Access');
     const sanitizedQty = parseInt(qty, 10) || 1;
-    db.run(`INSERT INTO bookings (booking_number, event_name, event_date, event_venue, customer_name, phone, email, amount, mpesa_code, ticket_type, qty, payment_status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`, [
+    await query(`INSERT INTO bookings (booking_number, event_name, event_date, event_venue, customer_name, phone, email, amount, mpesa_code, ticket_type, qty, payment_status)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'pending')`, [
         bookingNumber,
         event_name || 'We"R Afro · TheMostWanted & Friends Africa Live Tour',
         event_date || '2026-08-29',
@@ -154,10 +152,6 @@ router.post('/api/payment/submit', async (req, res) => {
         sanitizedQty
       ]);
     console.log('[PAYMENT] Database insert completed');
-
-    console.log('[PAYMENT] Persisting database to disk...');
-    saveDb();
-    console.log('[PAYMENT] Database persisted successfully');
 
     console.log('[PAYMENT] Success - booking created:', bookingNumber);
     if (isJson()) {
@@ -184,8 +178,7 @@ router.get('/api/booking/test', (req, res) => {
 
 router.get('/api/booking/:bookingNumber', async (req, res) => {
   try {
-    const db = await getDb();
-    const rows = query(`SELECT booking_number, payment_status FROM bookings WHERE booking_number = ?`, [req.params.bookingNumber]);
+    const rows = await query(`SELECT booking_number, payment_status FROM bookings WHERE booking_number = $1`, [req.params.bookingNumber]);
     if (rows.length === 0) {
       return res.json({ success: false, message: 'Booking not found.' });
     }
@@ -203,7 +196,6 @@ router.get('/booking/lookup', (req, res) => {
 
 router.post('/api/booking/lookup', async (req, res) => {
   try {
-    const db = await getDb();
     const { phone, booking_number } = req.body;
 
     const sanitizedPhone = sanitize(phone || '');
@@ -211,9 +203,9 @@ router.post('/api/booking/lookup', async (req, res) => {
 
     let bookings;
     if (sanitizedBookingNumber) {
-      bookings = query(`SELECT * FROM bookings WHERE booking_number = ?`, [sanitizedBookingNumber]);
+      bookings = await query(`SELECT * FROM bookings WHERE booking_number = $1`, [sanitizedBookingNumber]);
     } else if (sanitizedPhone) {
-      bookings = query(`SELECT * FROM bookings WHERE phone = ? ORDER BY created_at DESC`, [sanitizedPhone]);
+      bookings = await query(`SELECT * FROM bookings WHERE phone = $1 ORDER BY created_at DESC`, [sanitizedPhone]);
     } else {
       return res.json({ success: false, message: 'Provide phone number or booking number.' });
     }
@@ -223,7 +215,7 @@ router.post('/api/booking/lookup', async (req, res) => {
     }
 
     for (let b of bookings) {
-      b.tickets = query(`SELECT * FROM tickets WHERE booking_id = ?`, [b.id]);
+      b.tickets = await query(`SELECT * FROM tickets WHERE booking_id = $1`, [b.id]);
     }
 
     res.json({ success: true, bookings });
