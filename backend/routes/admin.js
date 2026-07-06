@@ -105,33 +105,41 @@ router.get('/admin/payments', adminAuth, async (req, res) => {
 });
 
 router.post('/admin/api/payment/:id/approve', adminAuth, async (req, res) => {
+  console.log('[APPROVE] POST /admin/api/payment/:id/approve - booking ID:', req.params.id);
   try {
     const db = await getDb();
     const bookingId = parseInt(req.params.id, 10);
 
     if (!bookingId || isNaN(bookingId)) {
+      console.log('[APPROVE] Invalid booking ID');
       return res.json({ success: false, message: 'Invalid booking ID.' });
     }
 
     const bResult = query(`SELECT * FROM bookings WHERE id = ?`, [bookingId]);
     if (bResult.length === 0) {
+      console.log('[APPROVE] Booking not found:', bookingId);
       return res.json({ success: false, message: 'Booking not found.' });
     }
     const booking = bResult[0];
+    console.log('[APPROVE] Found booking:', booking.booking_number, 'status:', booking.payment_status, 'ticket_type:', booking.ticket_type, 'qty:', booking.qty);
 
     if (booking.payment_status === 'paid') {
+      console.log('[APPROVE] Payment already approved');
       return res.json({ success: false, message: 'Payment already approved.' });
     }
 
     const existingTickets = query(`SELECT id FROM tickets WHERE booking_id = ?`, [bookingId]);
     if (existingTickets.length > 0) {
+      console.log('[APPROVE] Tickets already exist for this booking');
       return res.json({ success: false, message: 'Tickets have already been generated for this booking.' });
     }
 
+    console.log('[APPROVE] Updating payment status to paid...');
     db.run(`UPDATE bookings SET payment_status = 'paid', updated_at = datetime('now') WHERE id = ?`, [bookingId]);
 
-    const ticketType = 'General Access';
-    const qty = 1;
+    const ticketType = booking.ticket_type || 'General Access';
+    const qty = booking.qty || 1;
+    console.log('[APPROVE] Generating', qty, 'ticket(s) of type:', ticketType);
 
     const tickets = [];
     for (let i = 0; i < qty; i++) {
@@ -140,12 +148,15 @@ router.post('/admin/api/payment/:id/approve', adminAuth, async (req, res) => {
       const qrPayload = generateQRPayload(ticketNumber, qrSecret);
       const qrHash = crypto.createHash('sha256').update(qrPayload).digest('hex');
 
+      console.log('[APPROVE] Inserting ticket', i + 1, '- number:', ticketNumber);
       db.run(`INSERT INTO tickets (ticket_number, booking_id, event_name, ticket_type, holder_name, qr_payload, qr_hash, status)
         VALUES (?, ?, ?, ?, ?, ?, ?, 'unused')`, [ticketNumber, bookingId, booking.event_name, ticketType, booking.customer_name, qrPayload, qrHash]);
       tickets.push({ ticketNumber, qrPayload });
     }
 
+    console.log('[APPROVE] Persisting database...');
     saveDb();
+    console.log('[APPROVE] Approval complete, tickets:', tickets.map(t => t.ticketNumber));
 
     res.json({
       success: true,
@@ -153,7 +164,7 @@ router.post('/admin/api/payment/:id/approve', adminAuth, async (req, res) => {
       tickets: tickets.map(t => t.ticketNumber)
     });
   } catch (err) {
-    console.error('Approve error:', err);
+    console.error('[APPROVE] ERROR:', err.message, err.stack);
     res.json({ success: false, message: 'Error approving payment.' });
   }
 });

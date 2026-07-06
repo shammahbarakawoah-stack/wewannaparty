@@ -119,8 +119,10 @@ router.post('/api/payment/submit', async (req, res) => {
     }
 
     console.log('[PAYMENT] Inserting booking into database...');
-    db.run(`INSERT INTO bookings (booking_number, event_name, event_date, event_venue, customer_name, phone, amount, mpesa_code, payment_status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')`, [
+    const sanitizedTicketType = sanitize(ticket_type || 'General Access');
+    const sanitizedQty = parseInt(qty, 10) || 1;
+    db.run(`INSERT INTO bookings (booking_number, event_name, event_date, event_venue, customer_name, phone, amount, mpesa_code, ticket_type, qty, payment_status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`, [
         bookingNumber,
         event_name || 'We"R Afro · TheMostWanted & Friends Africa Live Tour',
         event_date || '2026-08-29',
@@ -128,7 +130,9 @@ router.post('/api/payment/submit', async (req, res) => {
         sanitizedName,
         sanitizedPhone,
         parsedAmount,
-        sanitizedCode
+        sanitizedCode,
+        sanitizedTicketType,
+        sanitizedQty
       ]);
     console.log('[PAYMENT] Database insert completed');
 
@@ -139,7 +143,7 @@ router.post('/api/payment/submit', async (req, res) => {
     console.log('[PAYMENT] Success - booking created:', bookingNumber);
     res.json({
       success: true,
-      message: 'Thank you. Your payment has been received and is awaiting verification. Your tickets will be generated once payment has been confirmed.',
+      message: 'Payment received successfully. Your payment is under review. You will receive your ticket once payment has been verified.',
       bookingNumber
     });
   } catch (err) {

@@ -66,11 +66,29 @@ async function initDb() {
     phone TEXT NOT NULL,
     amount REAL NOT NULL,
     mpesa_code TEXT NOT NULL,
+    ticket_type TEXT DEFAULT 'General Access',
+    qty INTEGER DEFAULT 1,
     payment_status TEXT DEFAULT 'pending',
     rejection_reason TEXT,
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
   )`);
+
+  // Migrate existing databases: add ticket_type and qty if missing
+  try {
+    const cols = db.exec("PRAGMA table_info(bookings)");
+    if (cols.length > 0) {
+      const colNames = cols[0].values.map(r => r[1]);
+      if (!colNames.includes('ticket_type')) {
+        db.run("ALTER TABLE bookings ADD COLUMN ticket_type TEXT DEFAULT 'General Access'");
+      }
+      if (!colNames.includes('qty')) {
+        db.run("ALTER TABLE bookings ADD COLUMN qty INTEGER DEFAULT 1");
+      }
+    }
+  } catch (e) {
+    console.error('[DB] Migration error:', e.message);
+  }
 
   db.run(`CREATE TABLE IF NOT EXISTS tickets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

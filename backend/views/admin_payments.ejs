@@ -208,11 +208,18 @@
   </nav>
 
   <div class="container">
-    <h1 class="page-title">Payment Verification</h1>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <h1 class="page-title">Payment Verification</h1>
+      <% const allCount=bookings.length; const pendingCount=bookings.filter(b=>b.payment_status==='pending').length; const paidCount=bookings.filter(b=>b.payment_status==='paid').length; const rejectedCount=bookings.filter(b=>b.payment_status==='rejected').length; %>
+      <% if (pendingCount > 0) { %>
+        <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);border-radius:100px;font-size:12px;color:var(--warning);font-weight:600;">
+          <span style="font-size:14px;">🔔</span> New Payment Awaiting Verification
+        </span>
+      <% } %>
+    </div>
     <p class="page-subtitle">Review and approve or reject customer payments</p>
 
     <div class="filter-bar">
-      <% const allCount=bookings.length; const pendingCount=bookings.filter(b=>b.payment_status==='pending').length; const paidCount=bookings.filter(b=>b.payment_status==='paid').length; const rejectedCount=bookings.filter(b=>b.payment_status==='rejected').length; %>
       <button class="filter-btn <%= filter === 'all' ? 'active' : '' %>" onclick="window.location='/admin/payments?status=all'">All<span class="filter-count"><%= allCount %></span></button>
       <button class="filter-btn <%= filter === 'pending' ? 'active' : '' %>" onclick="window.location='/admin/payments?status=pending'">Pending<span class="filter-count"><%= pendingCount %></span></button>
       <button class="filter-btn <%= filter === 'paid' ? 'active' : '' %>" onclick="window.location='/admin/payments?status=paid'">Approved<span class="filter-count"><%= paidCount %></span></button>
@@ -229,9 +236,10 @@
             <th>Booking #</th>
             <th>Customer</th>
             <th>Phone</th>
+            <th>Ticket Type</th>
+            <th>Qty</th>
             <th>Amount</th>
             <th>M-Pesa Code</th>
-            <th>Event</th>
             <th>Date</th>
             <th>Status</th>
             <th>Actions</th>
@@ -244,9 +252,10 @@
             <td style="font-family:monospace;font-size:12px;"><%= b.booking_number %></td>
             <td><%= b.customer_name || '—' %></td>
             <td><%= b.phone %></td>
+            <td><%= b.ticket_type || 'General Access' %></td>
+            <td style="text-align:center;"><%= b.qty || 1 %></td>
             <td style="font-weight:600;">KES <%= Number(b.amount).toLocaleString() %></td>
             <td style="font-family:monospace;font-size:12px;"><%= b.mpesa_code %></td>
-            <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><%= b.event_name %></td>
             <td style="white-space:nowrap;"><%= b.created_at %></td>
             <td>
               <span class="badge badge-<%= b.payment_status %>">
