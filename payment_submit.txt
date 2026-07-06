@@ -1,1 +1,0 @@
-{"success":true,"message":"Thank you. Your payment has been received and is awaiting verification. Your tickets will be generated once payment has been confirmed.","bookingNumber":"WWP-MR8WZ6X4-D28860"}

@@ -14,27 +14,105 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .nav-toggle {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 10px;
+      min-width: 44px;
+      min-height: 44px;
+      align-items: center;
+      justify-content: center;
+    }
+    .nav-toggle span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: #fff;
+      border-radius: 2px;
+      transition: all 0.3s;
+    }
+    .nav-toggle.active span:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+    }
+    .nav-toggle.active span:nth-child(2) {
+      opacity: 0;
+    }
+    .nav-toggle.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(5px, -5px);
+    }
+    @media (max-width: 860px) {
+      .nav-toggle { display: flex; }
+      .nav-links {
+        position: fixed;
+        top: 64px;
+        left: 0;
+        right: 0;
+        background: rgba(10,10,10,0.98);
+        backdrop-filter: blur(16px);
+        flex-direction: column;
+        padding: 20px;
+        gap: 16px;
+        transform: translateY(-120%);
+        transition: transform 0.3s ease;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        z-index: 99;
+      }
+      .nav-links.open {
+        transform: translateY(0);
+      }
+      .nav-links a, .nav-links .btn-sm {
+        font-size: 15px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+      }
+      .nav-links .btn-sm {
+        justify-content: center;
+      }
+    }
+    .qty-btn {
+      min-width: 44px;
+      min-height: 44px;
+    }
+    .btn:not(.btn-sm) {
+      min-height: 44px;
+    }
+    @media (max-width: 480px) {
+      .hero-title { font-size: 28px; }
+      .event-card { padding: 20px; }
+      .ticket-type { flex-direction: column; align-items: stretch; gap: 10px; }
+      .ticket-type-name { font-size: 13px; }
+      .hero-stats { gap: 16px; }
+      .hero-stat-value { font-size: 18px; }
+    }
+  </style>
 </head>
 <body>
 
-  <!-- Navigation -->
   <nav class="nav">
     <div class="nav-inner">
       <a href="/" class="nav-logo">
         <img src="logo.jpeg" alt="WeWannaParty" />
         <span>WeWannaParty</span>
       </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
       <ul class="nav-links">
-        <li><a href="#">Events</a></li>
-        <li><a href="#">Create Event</a></li>
-        <li><a href="#">My Tickets</a></li>
-        <li><a href="#">About</a></li>
+        <li><a href="/">Events</a></li>
+        <li><a href="/booking/lookup">My Tickets</a></li>
         <li><button class="btn btn-primary btn-sm">Sign In</button></li>
       </ul>
     </div>
   </nav>
 
-  <!-- Hero -->
   <section class="hero">
     <div class="hero-bg">
       <img src="poster.jpeg" alt="WeR Afro" />
@@ -76,7 +154,6 @@
         </div>
       </div>
 
-      <!-- Event Card -->
       <div class="event-card animate-in animate-in-2" id="tickets">
         <div>
           <div class="event-card-price">KES 3,000 <span>+ KES 40 fee</span></div>
@@ -110,11 +187,10 @@
           <div class="progress-label">Tickets selling fast — secure yours now</div>
         </div>
 
-        <!-- Tickets -->
         <div style="margin-top:20px;">
           <div style="font-size:12px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">Available Tickets</div>
 
-          <div class="ticket-type selected">
+          <div class="ticket-type selected" data-ticket-type="General Access" data-ticket-price="3000">
             <div>
               <div class="ticket-type-name">GENERAL ACCESS</div>
               <div class="ticket-type-desc">Full GA access — All live Amapiano, Afrohouse & 3-Step performances, immersive festival activations, food & beverage vendors on site</div>
@@ -129,7 +205,7 @@
             </div>
           </div>
 
-          <div class="ticket-type">
+          <div class="ticket-type" data-ticket-type="Priority Access" data-ticket-price="8000">
             <div>
               <div class="ticket-type-name">PRIORITY ACCESS</div>
               <div class="ticket-type-desc">Priority entry & fast-track, exclusive VIP area, premium stage views, dedicated VIP bars, designated parking</div>
@@ -144,7 +220,7 @@
             </div>
           </div>
 
-          <div class="ticket-type">
+          <div class="ticket-type" data-ticket-type="Duo" data-ticket-price="5899">
             <div>
               <div class="ticket-type-name">DUO</div>
               <div class="ticket-type-desc">Full GA access for two — everything is better with a friend</div>
@@ -159,7 +235,7 @@
             </div>
           </div>
 
-          <div class="ticket-type">
+          <div class="ticket-type" data-ticket-type="Squad Pass (X5)" data-ticket-price="13999">
             <div>
               <div class="ticket-type-name">SQUAD PASS (X5)</div>
               <div class="ticket-type-desc">Better with your whole crew — Full GA access for five</div>
@@ -188,7 +264,6 @@
     </div>
   </section>
 
-  <!-- About -->
   <section class="section">
     <div class="container">
       <div class="about-grid">
@@ -210,7 +285,6 @@
     </div>
   </section>
 
-  <!-- Lineup -->
   <section class="section section-dark">
     <div class="container">
       <div class="section-header">
@@ -253,7 +327,6 @@
     </div>
   </section>
 
-  <!-- Venue -->
   <section class="section">
     <div class="container">
       <div class="section-header">
@@ -287,7 +360,6 @@
     </div>
   </section>
 
-  <!-- FAQ -->
   <section class="section section-dark">
     <div class="container">
       <div class="section-header">
@@ -323,7 +395,6 @@
     </div>
   </section>
 
-  <!-- Footer -->
   <footer class="footer">
     <div class="footer-inner">
       <div class="footer-brand">
@@ -336,28 +407,21 @@
       <div>
         <h4>Platform</h4>
         <ul class="footer-links">
-          <li><a href="#">Browse Events</a></li>
-          <li><a href="#">Create Event</a></li>
-          <li><a href="#">Pricing</a></li>
-          <li><a href="#">Mobile App</a></li>
+          <li><a href="/">Browse Events</a></li>
         </ul>
       </div>
       <div>
         <h4>Company</h4>
         <ul class="footer-links">
-          <li><a href="#">About</a></li>
-          <li><a href="#">Blog</a></li>
-          <li><a href="#">Careers</a></li>
-          <li><a href="#">Press</a></li>
+          <li><a href="/">About</a></li>
         </ul>
       </div>
       <div>
         <h4>Support</h4>
         <ul class="footer-links">
-          <li><a href="#">Help Center</a></li>
-          <li><a href="#">Contact Us</a></li>
-          <li><a href="#">Terms of Service</a></li>
-          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="/">Contact Us</a></li>
+          <li><a href="/">Terms of Service</a></li>
+          <li><a href="/">Privacy Policy</a></li>
         </ul>
       </div>
     </div>
@@ -368,71 +432,67 @@
   </footer>
 
   <script>
-    // Quantity buttons
-    document.querySelectorAll('.qty-btn').forEach(btn => {
+    var navToggle = document.getElementById('navToggle');
+    var navLinks = document.querySelector('.nav-links');
+    if (navToggle && navLinks) {
+      navToggle.addEventListener('click', function() {
+        navLinks.classList.toggle('open');
+        navToggle.classList.toggle('active');
+      });
+      document.querySelectorAll('.nav-links a, .nav-links button').forEach(function(el) {
+        el.addEventListener('click', function() {
+          navLinks.classList.remove('open');
+          navToggle.classList.remove('active');
+        });
+      });
+    }
+
+    function updateGetTicketsLink() {
+      var selected = document.querySelector('.ticket-type.selected');
+      if (!selected) return;
+      var type = selected.getAttribute('data-ticket-type');
+      var price = parseInt(selected.getAttribute('data-ticket-price')) || 0;
+      var qtyEl = selected.querySelector('.qty-value');
+      var qty = qtyEl ? parseInt(qtyEl.textContent) || 1 : 1;
+      var total = price * qty;
+      var link = document.querySelector('.btn-get-tickets');
+      link.textContent = 'Get Tickets — KES ' + total.toLocaleString();
+      link.href = '/payment?amount=' + total + '&ticketType=' + encodeURIComponent(type) + '&qty=' + qty;
+    }
+
+    document.querySelectorAll('.ticket-type').forEach(function(el) {
+      el.addEventListener('click', function(e) {
+        if (e.target.closest('.qty-btn') || e.target.closest('.qty-selector')) return;
+        document.querySelectorAll('.ticket-type').forEach(function(t) { t.classList.remove('selected'); });
+        this.classList.add('selected');
+        updateGetTicketsLink();
+      });
+    });
+
+    document.querySelectorAll('.qty-btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
-        const selector = this.closest('.qty-selector');
-        const valueEl = selector.querySelector('.qty-value');
-        let val = parseInt(valueEl.textContent);
+        var selector = this.closest('.qty-selector');
+        var valueEl = selector.querySelector('.qty-value');
+        var val = parseInt(valueEl.textContent);
         if (this.textContent.trim() === '+') {
           val++;
         } else if (val > 0) {
           val--;
         }
         valueEl.textContent = val;
-      });
-    });
-
-    // Ticket type selection
-    const ticketData = {
-      'General Access': { price: 3000, desc: 'General Access' },
-      'Priority Access': { price: 8000, desc: 'Priority Access' },
-      'Duo': { price: 5899, desc: 'Duo' },
-      'Squad Pass (X5)': { price: 13999, desc: 'Squad Pass (X5)' }
-    };
-
-    document.querySelectorAll('.ticket-type').forEach(el => {
-      el.addEventListener('click', function(e) {
-        if (e.target.closest('.qty-btn') || e.target.closest('.qty-selector')) return;
-        document.querySelectorAll('.ticket-type').forEach(t => t.classList.remove('selected'));
-        this.classList.add('selected');
-        updateGetTicketsLink();
-      });
-    });
-
-    function updateGetTicketsLink() {
-      const selected = document.querySelector('.ticket-type.selected');
-      if (!selected) return;
-      const name = selected.querySelector('.ticket-type-name')?.textContent?.trim();
-      const qtyEl = selected.querySelector('.qty-value');
-      const qty = qtyEl ? parseInt(qtyEl.textContent) || 1 : 1;
-      const data = ticketData[name];
-      if (data) {
-        const link = document.querySelector('.btn-get-tickets');
-        const total = data.price * qty;
-        link.textContent = `Get Tickets — KES ${total.toLocaleString()}`;
-        link.href = `/payment?amount=${data.price}&ticketType=${encodeURIComponent(data.desc)}&qty=${qty}`;
-      }
-    }
-
-    // Update link when quantity changes
-    document.querySelectorAll('.qty-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
         setTimeout(updateGetTicketsLink, 10);
       });
     });
 
-    // Animate the watch count
-    let watchCount = 1827;
-    setInterval(() => {
+    var watchCount = 1827;
+    setInterval(function() {
       watchCount += Math.floor(Math.random() * 3);
-      const el = document.querySelector('.hero-stat-value');
+      var el = document.querySelector('.hero-stat-value');
       if (el) el.textContent = watchCount.toLocaleString();
     }, 5000);
 
-    // Animate progress bar
-    setTimeout(() => {
-      const fill = document.querySelector('.progress-fill');
+    setTimeout(function() {
+      var fill = document.querySelector('.progress-fill');
       if (fill) fill.style.width = '82%';
     }, 1000);
   </script>

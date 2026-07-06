@@ -309,17 +309,17 @@
 
           <div class="form-group">
             <label for="mpesa_code">M-Pesa Confirmation Code *</label>
-            <input type="text" id="mpesa_code" name="mpesa_code" placeholder="e.g. QWE1234567" required maxlength="30" />
+            <input type="text" id="mpesa_code" name="mpesa_code" placeholder="e.g. QWE1234567" required maxlength="30" pattern="[A-Za-z0-9]{6,20}" title="Enter a valid M-Pesa confirmation code (6–20 alphanumeric characters)" />
           </div>
 
           <div class="form-group">
             <label for="phone">Phone Number Used to Pay *</label>
-            <input type="tel" id="phone" name="phone" placeholder="e.g. 0712345678" required />
+            <input type="tel" id="phone" name="phone" placeholder="e.g. 0712345678" required pattern="^(0|\+?254)[0-9]{9,10}$" title="Enter a valid Kenyan phone number (e.g. 0712345678 or +254712345678)" />
           </div>
 
           <div class="form-group">
-            <label for="paid_amount">Amount Paid (KES) *</label>
-            <input type="number" id="paid_amount" name="paid_amount" value="<%= amount %>" required min="1" />
+            <label for="amount">Amount Paid (KES) *</label>
+            <input type="number" id="amount" name="amount" value="<%= amount %>" required min="1" />
           </div>
 
           <div class="form-group">
@@ -379,7 +379,7 @@
 
       const mpesaCode = document.getElementById('mpesa_code').value.trim();
       const phone = document.getElementById('phone').value.trim();
-      const amount = document.getElementById('paid_amount').value;
+      const amount = document.getElementById('amount').value;
       const fullName = document.getElementById('full_name').value.trim();
 
       if (!mpesaCode) { showAlert('error', 'Please enter the M-Pesa Confirmation Code.'); return; }

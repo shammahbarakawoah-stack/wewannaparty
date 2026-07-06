@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Error · WeWannaParty</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',sans-serif; background:#0A0A0A; color:#fff; min-height:100vh; display:flex; align-items:center; justify-content:center; flex-direction:column; padding:20px; text-align:center; }
+    h1 { font-family:'Syne',sans-serif; font-size:72px; color:#B00000; margin-bottom:8px; }
+    h2 { font-family:'Syne',sans-serif; font-size:24px; margin-bottom:16px; }
+    p { color:#A0A0A0; margin-bottom:24px; max-width:400px; }
+    a { display:inline-block; padding:12px 28px; background:#B00000; color:#fff; border-radius:8px; text-decoration:none; font-weight:600; font-size:14px; }
+    a:hover { background:#8B0000; }
+  </style>
+</head><body>
+  <h1><%= code || 404 %></h1>
+  <h2><%= title || 'Page Not Found' %></h2>
+  <p><%= message || 'The page you are looking for does not exist or has been moved.' %></p>
+  <a href="/">Go Home</a></body></html>

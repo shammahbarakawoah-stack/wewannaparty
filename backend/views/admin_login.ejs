@@ -92,6 +92,9 @@
       transition: all 0.2s;
     }
     .btn:hover { background: var(--primary-dark); }
+    .btn:disabled { opacity:0.6; cursor:not-allowed; }
+    .spinner { display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.6s linear infinite; vertical-align:middle; margin-right:6px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
     .error {
       background: rgba(239,68,68,0.1);
       border: 1px solid rgba(239,68,68,0.2);
@@ -116,17 +119,24 @@
       <div class="error"><%= error %></div>
     <% } %>
 
-    <form method="POST" action="/admin/login">
+    <form method="POST" action="/admin/login" id="login-form">
       <div class="form-group">
         <label for="username">Username</label>
-        <input type="text" id="username" name="username" placeholder="Enter username" required />
+        <input type="text" id="username" name="username" placeholder="Enter username" required minlength="3" />
       </div>
       <div class="form-group">
         <label for="password">Password</label>
-        <input type="password" id="password" name="password" placeholder="Enter password" required />
+        <input type="password" id="password" name="password" placeholder="Enter password" required minlength="6" />
       </div>
-      <button type="submit" class="btn">Sign In</button>
+      <button type="submit" class="btn" id="login-btn">Sign In</button>
     </form>
+    <script>
+      document.getElementById('login-form').addEventListener('submit', function() {
+        const btn = document.getElementById('login-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Signing In...';
+      });
+    </script>
   </div>
 </body>
 </html>

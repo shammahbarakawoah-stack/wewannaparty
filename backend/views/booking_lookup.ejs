@@ -185,9 +185,9 @@
 
     <div class="card">
       <div class="form-row">
-        <input type="text" id="booking-number" placeholder="Booking Number (e.g. WWP-...)" />
+        <input type="text" id="booking-number" placeholder="Booking Number (e.g. WWP-...)" pattern="[A-Za-z0-9-]{4,}" title="Enter a valid booking number" />
         <span style="color:var(--text-muted);font-size:13px;display:flex;align-items:center;">or</span>
-        <input type="tel" id="phone-number" placeholder="Phone Number (e.g. 0712345678)" />
+        <input type="tel" id="phone-number" placeholder="Phone Number (e.g. 0712345678)" pattern="^(0|\+?254)[0-9]{9,10}$" title="Enter a valid Kenyan phone number" />
         <button id="lookup-btn" onclick="lookupBooking()">Search</button>
       </div>
     </div>
@@ -208,7 +208,7 @@
       }
 
       btn.disabled = true;
-      btn.textContent = 'Searching...';
+      btn.innerHTML = '<span class="spinner"></span> Searching...';
       results.innerHTML = '<div class="loading"><span class="spinner"></span><p style="margin-top:12px;">Looking up your booking...</p></div>';
 
       try {
@@ -278,7 +278,7 @@
         results.innerHTML = '<div class="empty-state"><p style="color:var(--danger);">Network error. Please try again.</p></div>';
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Search';
+        btn.innerHTML = 'Search';
       }
     }
   </script>

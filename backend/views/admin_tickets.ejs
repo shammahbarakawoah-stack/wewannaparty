@@ -115,6 +115,9 @@
 
     .actions { display: flex; gap: 4px; flex-wrap: wrap; }
     .empty { text-align: center; padding: 48px; color: var(--text-muted); font-size: 14px; }
+    .spinner-sm { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.6s linear infinite; vertical-align:middle; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .btn-sm:disabled { opacity:0.5; cursor:not-allowed; }
 
     .toast {
       position: fixed; bottom: 24px; right: 24px;
@@ -188,13 +191,13 @@
             <td>
               <div class="actions">
                 <% if (t.status === 'unused') { %>
-                  <button class="btn-sm btn-cancel" onclick="cancelTicket(<%= t.id %>)">Cancel</button>
+                  <button class="btn-sm btn-cancel" onclick="cancelTicket(<%= t.id %>, this)">Cancel</button>
                 <% } %>
                 <% if (t.status === 'cancelled' || t.status === 'used') { %>
-                  <button class="btn-sm btn-reissue" onclick="reissueTicket(<%= t.id %>)">Reissue</button>
+                  <button class="btn-sm btn-reissue" onclick="reissueTicket(<%= t.id %>, this)">Reissue</button>
                 <% } %>
                 <% if (t.status === 'unused') { %>
-                  <button class="btn-sm btn-outline-sm" onclick="showQR(<%= t.id %>)">Show QR</button>
+                  <button class="btn-sm btn-outline-sm" onclick="showQR(<%= t.id %>, this)">Show QR</button>
                 <% } %>
               </div>
             </td>
@@ -216,27 +219,36 @@
       setTimeout(() => t.className = 'toast', 4000);
     }
 
-    async function cancelTicket(id) {
+    async function cancelTicket(id, el) {
       if (!confirm('Cancel this ticket? It will no longer be valid for entry.')) return;
+      const btn = el || event.target;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-sm"></span>';
       try {
         const res = await fetch('/admin/api/ticket/' + id + '/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
         const data = await res.json();
         if (data.success) { showToast('Ticket cancelled.', 'success'); setTimeout(() => location.reload(), 1000); }
-        else { showToast(data.message, 'error'); }
-      } catch (e) { showToast('Error.', 'error'); }
+        else { showToast(data.message, 'error'); btn.disabled=false; btn.textContent='Cancel'; }
+      } catch (e) { showToast('Error.', 'error'); btn.disabled=false; btn.textContent='Cancel'; }
     }
 
-    async function reissueTicket(id) {
+    async function reissueTicket(id, el) {
       if (!confirm('Reissue this ticket? A new ticket number and QR code will be generated.')) return;
+      const btn = el || event.target;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-sm"></span>';
       try {
         const res = await fetch('/admin/api/ticket/' + id + '/reissue', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
         const data = await res.json();
         if (data.success) { showToast('Ticket reissued.', 'success'); setTimeout(() => location.reload(), 1000); }
-        else { showToast(data.message, 'error'); }
-      } catch (e) { showToast('Error.', 'error'); }
+        else { showToast(data.message, 'error'); btn.disabled=false; btn.textContent='Reissue'; }
+      } catch (e) { showToast('Error.', 'error'); btn.disabled=false; btn.textContent='Reissue'; }
     }
 
-    async function showQR(id) {
+    async function showQR(id, el) {
+      const btn = el || event.target;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-sm"></span>';
       try {
         const res = await fetch('/api/ticket/' + id + '/qr');
         const data = await res.json();
@@ -255,8 +267,8 @@
               <p style="font-size:11px;color:#555;">Scan this QR at the venue for entry</p>
             </body></html>
           `);
-        } else { showToast('Error loading QR.', 'error'); }
-      } catch (e) { showToast('Error.', 'error'); }
+        } else { showToast('Error loading QR.', 'error'); btn.disabled=false; btn.textContent='Show QR'; }
+      } catch (e) { showToast('Error.', 'error'); btn.disabled=false; btn.textContent='Show QR'; }
     }
   </script>
 </body>

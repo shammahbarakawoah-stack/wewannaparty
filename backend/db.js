@@ -106,17 +106,11 @@ async function initDb() {
   if (existing.length === 0 || existing[0].values.length === 0) {
     const hash = bcrypt.hashSync('admin123', 10);
     db.run("INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)", ['admin', hash, 'superadmin']);
-    console.log('Default admin created');
   } else {
-    console.log('Admin already exists');
+    // Admin already exists
   }
 
-  // Verify
-  const verify = db.exec("SELECT id, username FROM admins");
-  console.log('Admins after init:', JSON.stringify(verify));
-
   saveDb();
-  console.log('Database saved to:', DB_PATH);
 }
 
 module.exports = { getDb, saveDb, initDb, query };

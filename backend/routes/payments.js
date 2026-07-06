@@ -7,7 +7,16 @@ const crypto = require('crypto');
 const PAYBILL = '400200';
 const ACCOUNT = '01102884553001';
 
-// Generate unique booking number
+function sanitize(str) {
+  if (typeof str !== 'string') return '';
+  return str.trim()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 function generateBookingNumber() {
   const prefix = 'WWP';
   const ts = Date.now().toString(36).toUpperCase();
@@ -15,7 +24,6 @@ function generateBookingNumber() {
   return `${prefix}-${ts}-${rand}`;
 }
 
-// Generate secure QR payload (no DB IDs exposed)
 function generateQRPayload(ticketNumber, secret) {
   const timestamp = Date.now();
   const payload = `${ticketNumber}:${timestamp}:${secret}`;
@@ -35,7 +43,6 @@ function verifyQRPayload(qrData) {
   }
 }
 
-// GET payment page
 router.get('/payment', (req, res) => {
   const { amount, ticketType, qty } = req.query;
   res.render('payment', {
@@ -47,29 +54,52 @@ router.get('/payment', (req, res) => {
   });
 });
 
-// POST submit payment
-router.post('/api/payment/submit', express.json(), async (req, res) => {
+router.post('/api/payment/submit', async (req, res) => {
   try {
-    const { mpesa_code, phone, amount_paid, full_name, ticket_type, qty, event_name, event_date, event_venue } = req.body;
-    const amount = amount_paid || req.body.amount;
+    const { mpesa_code, phone, amount_paid, amount: bodyAmount, full_name, ticket_type, qty, event_name, event_date, event_venue } = req.body;
+    const parsedAmount = parseFloat(bodyAmount || amount_paid || 0);
 
-    if (!mpesa_code || !mpesa_code.trim()) {
+    const sanitizedCode = sanitize(mpesa_code || '');
+    const sanitizedPhone = sanitize(phone || '');
+    const sanitizedName = sanitize(full_name || '');
+
+    if (!sanitizedCode) {
       return res.json({ success: false, message: 'M-Pesa Confirmation Code is required.' });
     }
-    if (!phone || !phone.trim()) {
+    if (!/^[a-zA-Z0-9]+$/.test(sanitizedCode)) {
+      return res.json({ success: false, message: 'M-Pesa Confirmation Code must be alphanumeric.' });
+    }
+    if (sanitizedCode.length > 30) {
+      return res.json({ success: false, message: 'M-Pesa Confirmation Code must be at most 30 characters.' });
+    }
+
+    if (!sanitizedPhone) {
       return res.json({ success: false, message: 'Phone number is required.' });
     }
-    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
-      return res.json({ success: false, message: 'Valid amount is required.' });
+    const phoneDigits = sanitizedPhone.replace(/[\s-]/g, '');
+    if (!/^(?:\+254|0)\d{9}$/.test(phoneDigits)) {
+      return res.json({ success: false, message: 'Please enter a valid phone number (+254 or 0 prefix).' });
+    }
+
+    if (!parsedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
+      return res.json({ success: false, message: 'A valid positive amount is required.' });
+    }
+
+    if (sanitizedName.length > 100) {
+      return res.json({ success: false, message: 'Full name must be at most 100 characters.' });
     }
 
     const db = await getDb();
     const bookingNumber = generateBookingNumber();
 
-    // Check if M-Pesa code already used
-    const existing = query(`SELECT id FROM bookings WHERE mpesa_code = ?`, [mpesa_code.trim()]);
+    const existing = query(`SELECT id FROM bookings WHERE mpesa_code = ?`, [sanitizedCode]);
     if (existing.length > 0) {
       return res.json({ success: false, message: 'This M-Pesa Confirmation Code has already been used.' });
+    }
+
+    const recentDupe = query(`SELECT id FROM bookings WHERE phone = ? AND amount = ? AND created_at >= datetime('now', '-5 minutes')`, [sanitizedPhone, parsedAmount]);
+    if (recentDupe.length > 0) {
+      return res.json({ success: false, message: 'A similar payment was submitted recently. Please wait for confirmation.' });
     }
 
     db.run(`INSERT INTO bookings (booking_number, event_name, event_date, event_venue, customer_name, phone, amount, mpesa_code, payment_status)
@@ -78,10 +108,10 @@ router.post('/api/payment/submit', express.json(), async (req, res) => {
         event_name || 'We"R Afro · TheMostWanted & Friends Africa Live Tour',
         event_date || '2026-08-29',
         event_venue || 'Uhuru Gardens, Nairobi',
-        full_name || '',
-        phone.trim(),
-        parseFloat(amount),
-        mpesa_code.trim()
+        sanitizedName,
+        sanitizedPhone,
+        parsedAmount,
+        sanitizedCode
       ]);
     saveDb();
 
@@ -96,7 +126,6 @@ router.post('/api/payment/submit', express.json(), async (req, res) => {
   }
 });
 
-// GET check booking status
 router.get('/api/booking/:bookingNumber', async (req, res) => {
   try {
     const db = await getDb();
@@ -111,21 +140,23 @@ router.get('/api/booking/:bookingNumber', async (req, res) => {
   }
 });
 
-// GET booking details (for customer lookup page)
 router.get('/booking/lookup', (req, res) => {
   res.render('booking_lookup');
 });
 
-router.post('/api/booking/lookup', express.json(), async (req, res) => {
+router.post('/api/booking/lookup', async (req, res) => {
   try {
     const db = await getDb();
     const { phone, booking_number } = req.body;
 
+    const sanitizedPhone = sanitize(phone || '');
+    const sanitizedBookingNumber = sanitize(booking_number || '');
+
     let bookings;
-    if (booking_number) {
-      bookings = query(`SELECT * FROM bookings WHERE booking_number = ?`, [booking_number.trim()]);
-    } else if (phone) {
-      bookings = query(`SELECT * FROM bookings WHERE phone = ? ORDER BY created_at DESC`, [phone.trim()]);
+    if (sanitizedBookingNumber) {
+      bookings = query(`SELECT * FROM bookings WHERE booking_number = ?`, [sanitizedBookingNumber]);
+    } else if (sanitizedPhone) {
+      bookings = query(`SELECT * FROM bookings WHERE phone = ? ORDER BY created_at DESC`, [sanitizedPhone]);
     } else {
       return res.json({ success: false, message: 'Provide phone number or booking number.' });
     }
@@ -134,7 +165,6 @@ router.post('/api/booking/lookup', express.json(), async (req, res) => {
       return res.json({ success: false, message: 'No bookings found.' });
     }
 
-    // Get tickets for each booking
     for (let b of bookings) {
       b.tickets = query(`SELECT * FROM tickets WHERE booking_id = ?`, [b.id]);
     }
@@ -146,7 +176,6 @@ router.post('/api/booking/lookup', express.json(), async (req, res) => {
   }
 });
 
-// GET my tickets page
 router.get('/my-tickets', (req, res) => {
   res.render('my_tickets');
 });

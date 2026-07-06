@@ -168,6 +168,8 @@
       width: 100%;
     }
     .btn-toggle-scanner:hover { border-color: var(--text-muted); }
+    .spinner-sm { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.6s linear infinite; vertical-align:middle; margin-right:4px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
 
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     .scanning-indicator {
@@ -289,7 +291,12 @@
     async function manualScan() {
       const qrData = document.getElementById('manual-qr').value.trim();
       if (!qrData) return;
+      const btn = document.querySelector('.manual-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-sm"></span> Verifying...';
       await verifyQR(qrData);
+      btn.disabled = false;
+      btn.textContent = 'Verify Code';
     }
 
     async function verifyQR(qrData) {
@@ -371,7 +378,7 @@
     async function checkIn(ticketId) {
       const btn = document.querySelector('.btn-checkin');
       btn.disabled = true;
-      btn.textContent = 'Checking in...';
+      btn.innerHTML = '<span class="spinner-sm"></span> Checking in...';
 
       try {
         const res = await fetch('/admin/api/ticket/' + ticketId + '/checkin', {
@@ -380,7 +387,7 @@
         });
         const data = await res.json();
         if (data.success) {
-          document.querySelector('.result-content, #result-content').innerHTML = `
+          document.getElementById('result-content').innerHTML = `
             <div class="result-valid">
               <div class="icon-big valid">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>

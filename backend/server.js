@@ -4,6 +4,12 @@ const session = require('express-session');
 const path = require('path');
 const { initDb, getDb, saveDb, query } = require('./db');
 const QRCode = require('qrcode');
+const cors = require('cors');
+
+let helmet;
+try { helmet = require('helmet'); } catch (e) {}
+let rateLimit;
+try { rateLimit = require('express-rate-limit'); } catch (e) {}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,6 +20,9 @@ app.set('trust proxy', 1);
 // View engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+
+// Security headers
+if (helmet) app.use(helmet());
 
 // Session
 app.use(session({
@@ -27,6 +36,19 @@ app.use(session({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// CORS
+app.use(cors());
+
+// Root route
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'index.html'));
+});
+
+// Redirect /index.html to /
+app.get('/index.html', (req, res) => {
+  res.redirect(301, '/');
+});
+
 // Static files
 app.use(express.static(path.join(__dirname, '..')));
 
@@ -35,6 +57,12 @@ const paymentRoutes = require('./routes/payments');
 const adminRoutes = require('./routes/admin');
 app.use('/', paymentRoutes);
 app.use('/', adminRoutes);
+
+// Rate limiting for payment submit endpoint
+if (rateLimit) {
+  const paymentLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: { success: false, message: 'Too many requests, please try again later.' } });
+  app.use('/api/payment/submit', paymentLimiter);
+}
 
 // API: Get QR code image for a ticket
 app.get('/api/ticket/:id/qr', async (req, res) => {
@@ -186,7 +214,46 @@ app.get('/api/ticket/:id/download', async (req, res) => {
 
 // Redirect old index.html "Get Tickets" button goes to payment page
 app.get('/event/wer-afro', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'index.html'));
+  try {
+    res.sendFile(path.join(__dirname, '..', 'index.html'));
+  } catch (err) {
+    res.status(500).send('Error serving page.');
+  }
+});
+
+// 404 handler - must be after all routes
+app.use((req, res) => {
+  res.status(404).send(`<!DOCTYPE html>
+<html><head><title>404 - Page Not Found</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:#0A0A0A; font-family:sans-serif; flex-direction:column; padding:20px; }
+  .card { background:#111; border:1px solid #222; border-radius:16px; padding:48px; text-align:center; max-width:400px; width:100%; }
+  h1 { color:#B00000; font-size:64px; margin-bottom:8px; }
+  h2 { color:#fff; font-size:18px; margin-bottom:16px; }
+  p { color:#888; font-size:13px; margin-bottom:24px; }
+  a { display:inline-block; padding:10px 24px; background:#B00000; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; text-decoration:none; }
+</style></head>
+<body><div class="card"><h1>404</h1><h2>Page Not Found</h2><p>The page you're looking for doesn't exist.</p><a href="/">Go Home</a></div></body></html>`);
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).send(`<!DOCTYPE html>
+<html><head><title>500 - Server Error</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:#0A0A0A; font-family:sans-serif; flex-direction:column; padding:20px; }
+  .card { background:#111; border:1px solid #222; border-radius:16px; padding:48px; text-align:center; max-width:400px; width:100%; }
+  h1 { color:#B00000; font-size:48px; margin-bottom:8px; }
+  h2 { color:#fff; font-size:18px; margin-bottom:16px; }
+  p { color:#888; font-size:13px; margin-bottom:24px; }
+  a { display:inline-block; padding:10px 24px; background:#B00000; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; text-decoration:none; }
+</style></head>
+<body><div class="card"><h1>500</h1><h2>Something went wrong</h2><p>An unexpected error occurred. Please try again later.</p><a href="/">Go Home</a></div></body></html>`);
 });
 
 // Initialize database and start server
