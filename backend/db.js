@@ -100,14 +100,14 @@ async function initDb() {
     FOREIGN KEY (ticket_id) REFERENCES tickets(id)
   )`);
 
-  // Create default admin if not exists
+  // Create or update default admin
   const bcrypt = require('bcryptjs');
-  const existing = db.exec("SELECT id FROM admins WHERE username = 'admin'");
-  if (existing.length === 0 || existing[0].values.length === 0) {
-    const hash = bcrypt.hashSync('admin123', 10);
-    db.run("INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)", ['admin', hash, 'superadmin']);
+  const hash = bcrypt.hashSync('Alwayswinning254', 10);
+  const existingAdmins = query("SELECT id, username FROM admins LIMIT 1");
+  if (existingAdmins.length === 0) {
+    db.run("INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)", ['shammah', hash, 'superadmin']);
   } else {
-    // Admin already exists
+    db.run("UPDATE admins SET username = ?, password_hash = ? WHERE id = ?", ['shammah', hash, existingAdmins[0].id]);
   }
 
   saveDb();
