@@ -28,6 +28,7 @@ if (helmet) {
       useDefaults: true,
       directives: {
         scriptSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrcAttr: ["'unsafe-inline'"],
         imgSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
       },
     },
