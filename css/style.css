@@ -509,6 +509,9 @@ a { color: inherit; text-decoration: none; }
   padding: 20px;
   text-align: center;
   transition: all 0.3s;
+  display: block;
+  text-decoration: none;
+  color: inherit;
 }
 .artist-card:hover {
   border-color: #B00000;
