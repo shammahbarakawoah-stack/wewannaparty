@@ -69,7 +69,7 @@ async function sendTicketEmail(booking, tickets) {
 
         <p style="font-size:12px;color:#666;margin:24px 0 0;line-height:1.6;text-align:center;">
           You can also view your tickets anytime:<br />
-          <a href="https://${process.env.DOMAIN || 'kolawewannaparty.onrender.com'}/booking/lookup" style="color:#B00000;text-decoration:none;font-weight:600;">My Tickets</a>
+          <a href="https://${process.env.DOMAIN || 'wewannaparty-kolamostwantedevent.onrender.com'}/booking/lookup" style="color:#B00000;text-decoration:none;font-weight:600;">My Tickets</a>
         </p>
       </td></tr>
       <tr><td style="text-align:center;padding-top:16px;">

@@ -35,11 +35,11 @@ if (helmet) {
   }));
 }
 
-// Domain redirect: old domains -> kolawewannaparty.onrender.com + HTTP -> HTTPS
+// Domain redirect: old domains -> wewannaparty-kolamostwantedevent.onrender.com + HTTP -> HTTPS
 app.use((req, res, next) => {
   const host = (req.headers.host || '').toLowerCase();
-  const targetDomain = 'kolawewannaparty.onrender.com';
-  const oldDomains = ['wewannaparty.africa', 'www.wewannaparty.africa'];
+  const targetDomain = 'wewannaparty-kolamostwantedevent.onrender.com';
+  const oldDomains = ['wewannaparty.africa', 'www.wewannaparty.africa', 'kolawewannaparty.onrender.com'];
 
   // Old domain -> new domain (always HTTPS)
   if (oldDomains.some(d => host === d)) {

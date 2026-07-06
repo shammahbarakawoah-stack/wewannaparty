@@ -16,6 +16,6 @@ services:
       - key: SENDGRID_API_KEY
         sync: false
       - key: DOMAIN
-        value: kolawewannaparty.onrender.com
+        value: wewannaparty-kolamostwantedevent.onrender.com
       - key: FROM_EMAIL
         sync: false
