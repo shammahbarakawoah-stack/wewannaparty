@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: wewannaparty
+    runtime: node
+    repo: https://github.com/shammahbarakawoah-stack/wewannaparty
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
