@@ -49,14 +49,21 @@ app.get('/index.html', (req, res) => {
   res.redirect(301, '/');
 });
 
-// Static files
-app.use(express.static(path.join(__dirname, '..')));
-
 // Routes
 const paymentRoutes = require('./routes/payments');
 const adminRoutes = require('./routes/admin');
 app.use('/', paymentRoutes);
 app.use('/', adminRoutes);
+
+// Support direct access to /payment.html as well
+app.get('/payment.html', (req, res) => {
+  const { amount, ticketType, qty } = req.query;
+  const queryString = amount || ticketType || qty ? `?amount=${amount || '3000'}&ticketType=${encodeURIComponent(ticketType || 'General Access')}&qty=${qty || '1'}` : '';
+  res.redirect(301, '/payment' + queryString);
+});
+
+// Static files
+app.use(express.static(path.join(__dirname, '..')));
 
 // Rate limiting for payment submit endpoint
 if (rateLimit) {

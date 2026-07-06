@@ -177,7 +177,15 @@ router.post('/api/booking/lookup', async (req, res) => {
 });
 
 router.get('/my-tickets', (req, res) => {
-  res.render('my_tickets');
+  res.redirect('/booking/lookup');
+});
+
+router.head('/api/booking/test', (req, res) => {
+  res.status(200).end();
+});
+
+router.get('/api/booking/test', (req, res) => {
+  res.json({ success: true, message: 'Backend is online.' });
 });
 
 module.exports = router;
